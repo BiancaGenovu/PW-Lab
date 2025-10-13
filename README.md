@@ -1,4 +1,6 @@
 # PW-Lab
+
+AnGular & Node + MariaDB
 Track Mate F1
 🏁 TrackMate – Descriere aplicație
 
