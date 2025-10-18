@@ -1,0 +1,179 @@
+/* ===== HERO (FULL SCREEN WIDTH) ===== */
+.tm-hero {
+  position: relative;
+  width: 100vw;                         /* ocupă întreaga lățime vizibilă */
+  margin-left: calc(-50vw + 50%);       /* elimină marginile implicite Angular */
+  min-height: 100vh;                    /* ocupă toată înălțimea ecranului */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  margin-top: 0;                        /* elimină marginea de sus */
+  background: #000;                     /* fallback negru */
+}
+
+/* ===== BACKGROUND IMAGE ===== */
+.tm-hero__bg {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-image: url('/assets/img/pozaf1.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  z-index: 1;
+}
+
+/* ===== DARK OVERLAY CU ACCENT ROȘU ===== */
+.tm-hero__overlay {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(18,18,18,0.85) 0%,
+    rgba(18,18,18,0.7) 50%,
+    rgba(225,6,0,0.2) 100%
+  );
+  z-index: 2;
+}
+
+/* ===== CONTENT ===== */
+.tm-hero__content {
+  position: relative;
+  z-index: 3;
+  text-align: center;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem;
+  color: #fff;
+}
+
+/* ===== TITLU ===== */
+.tm-hero__title {
+  font-size: 3.5rem;
+  font-weight: 800;
+  color: #fff;
+  margin: 0 0 1rem 0;
+}
+
+.tm-hero__title .accent {
+  color: #E10600;
+}
+
+/* ===== SUBTITLU ===== */
+.tm-hero__subtitle {
+  font-size: 1.25rem;
+  color: #cfcfcf;
+  margin: 0 0 3rem 0;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+  line-height: 1.6;
+}
+
+/* ===== BUTON ===== */
+.btn--outline-red {
+  background: transparent;
+  color: #fafafa;
+  border: 2px solid #E10600;
+  padding: 1rem 2rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+.btn--outline-red:hover {
+  background: #E10600;
+  color: #fff;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(225,6,0,0.3);
+}
+
+/* ===== STATISTICI ===== */
+.tm-hero__stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 3rem;
+  max-width: 900px;
+  margin: 0 auto;
+  margin-top: 2rem;
+}
+
+.stat {
+  text-align: center;
+}
+
+.stat__value {
+  font-size: 3rem;
+  font-weight: 700;
+  color: #E10600;
+  margin-bottom: 0.5rem;
+  line-height: 1;
+}
+
+.stat__label {
+  font-size: 0.875rem;
+  color: #a1a1a1;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* ===== RESPONSIVE ===== */
+@media(max-width: 1024px) {
+  .tm-hero__title { font-size: 3rem; }
+  .stat__value { font-size: 2.5rem; }
+}
+@media(max-width: 768px) {
+  .tm-hero__title { font-size: 2.5rem; }
+  .tm-hero__stats { grid-template-columns: 1fr; gap: 2rem; }
+}
+
+
+/* ===== INTRO (full-width + fundal negru) ===== */
+.tm-intro {
+  width: 100vw;                              /* ocupă toată lățimea ecranului */
+  margin-left: calc(-50vw + 50%);            /* elimină marginile implicite Angular */
+  background: #0f0f10;                       /* fundal negru curat */
+  padding: 6rem 2rem;                        /* spațiu sus-jos */
+  border-top: 1px solid rgba(225,6,0,0.25);  /* linie subtilă roșie sus */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+/* Containerul din interior (centrat și pe verticală) */
+.tm-intro__container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Titlu mare alb + accent roșu */
+.tm-intro__title {
+  font-size: 3rem;
+  font-weight: 800;
+  color: #ffffff;
+  margin: 0 0 1rem 0;
+  letter-spacing: -0.02em;
+}
+
+.tm-intro__title .accent {
+  color: #E10600;
+}
+
+/* Subtitlu */
+.tm-intro__subtitle {
+  font-size: 1.25rem;
+  color: rgba(255,255,255,0.8);
+  margin: 0 auto;
+  max-width: 700px;
+  line-height: 1.6;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .tm-intro__title { font-size: 2.5rem; }
+}
+@media (max-width: 768px) {
+  .tm-intro { padding: 4rem 1rem; }
+  .tm-intro__title { font-size: 2rem; }
+  .tm-intro__subtitle { font-size: 1rem; }
+}

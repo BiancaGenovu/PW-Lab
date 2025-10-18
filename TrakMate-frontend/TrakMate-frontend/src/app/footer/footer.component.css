@@ -1,0 +1,80 @@
+/* ===== FEATURES SECTION (FULL WIDTH) ===== */
+.tm-features {
+  width: 100vw;               /* ocupă toată lățimea vizibilă */
+  margin-left: calc(-50vw + 50%); /* elimină marginile containerului Angular */
+  background: #0f0f10;        /* fundal negru */
+  padding: 64px 0;            /* spațiu sus/jos */
+  display: flex;
+  justify-content: center;    /* centrează conținutul orizontal */
+}
+
+/* Grilă centrată */
+.tm-features__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(320px, 480px));
+  gap: 24px;
+  justify-content: center;
+  align-content: start;
+  width: 100%;
+  max-width: 1100px;
+  padding: 0 24px;
+}
+
+/* Card */
+.tm-card {
+  background: #151515;
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 12px;
+  padding: 22px 24px;
+  display: grid;
+  grid-template-columns: 64px 1fr;
+  align-items: start;
+  gap: 18px;
+  box-shadow: 0 10px 24px rgba(0,0,0,.25);
+}
+
+/* Icon tile */
+.tm-card__icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 12px;
+  background: rgba(225,6,0,0.12);
+  display: grid;
+  place-items: center;
+  box-shadow: inset 0 0 0 1px rgba(225,6,0,0.25);
+}
+.tm-card__icon span {
+  font-size: 28px;
+  color: #e10600;
+}
+
+/* Text */
+.tm-card__title {
+  margin: 4px 0 6px;
+  font-size: 22px;
+  font-weight: 800;
+  color: #f1f2f4;
+  letter-spacing: .2px;
+}
+.tm-card__subtitle {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.5;
+  color: rgba(255,255,255,0.72);
+}
+
+/* Hover effect */
+.tm-card:hover {
+  border-color: rgba(255,255,255,0.12);
+  transform: translateY(-1px);
+  transition: transform .08s ease, border-color .2s ease, box-shadow .2s ease;
+  box-shadow: 0 14px 30px rgba(0,0,0,.35);
+}
+
+/* Responsive: 1 col pe ecrane mici */
+@media (max-width: 820px) {
+  .tm-features__grid {
+    grid-template-columns: minmax(280px, 540px);
+    justify-content: center;
+  }
+}
