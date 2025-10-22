@@ -1,0 +1,26 @@
+<app-nav-bar></app-nav-bar>
+<section class="auth">
+  <div class="auth-card">
+    <h1 class="auth-title">Conectare</h1>
+    <p class="auth-subtitle">Intră în contul tău Track<span class="accent">Mate</span></p>
+
+    <form class="auth-form" autocomplete="on">
+      <label class="field">
+        <span class="field__label">User</span>
+        <input class="field__input" type="text" name="username" placeholder="ex: lando_norris" required />
+      </label>
+
+      <label class="field">
+        <span class="field__label">Parolă</span>
+        <input class="field__input" type="password" name="password" placeholder="••••••••" required />
+      </label>
+
+      <div class="actions">
+        <button type="submit" class="btn btn--white">Conectare</button>
+        <a class="btn btn--white" (click)="changeToRegister()">Register now</a>
+      </div>
+    </form>
+  </div>
+</section>
+
+<app-footer></app-footer>

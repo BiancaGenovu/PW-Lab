@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-content',
@@ -8,5 +9,8 @@ import { Component } from '@angular/core';
   styleUrl: './content.component.css'
 })
 export class ContentComponent {
-
+constructor(private router: Router) {}
+   changeToLogin() {
+    this.router.navigate(['/login']);
+}
 }

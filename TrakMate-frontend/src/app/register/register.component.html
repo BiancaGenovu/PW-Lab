@@ -1,0 +1,52 @@
+<section class="auth">
+  <div class="auth-card">
+    <h1 class="auth-title">Înregistrare</h1>
+    <p class="auth-subtitle">Creează-ți cont pe Track<span class="accent">Mate</span></p>
+
+    <form class="auth-form" autocomplete="on" enctype="multipart/form-data">
+      <!-- USER -->
+      <label class="field">
+        <span class="field__label">User</span>
+        <input class="field__input" type="text" name="username" placeholder="ex: lando_norris" required />
+      </label>
+
+      <!-- PAROLĂ -->
+      <label class="field">
+        <span class="field__label">Parolă</span>
+        <input class="field__input" type="password" name="password" placeholder="••••••••" required />
+      </label>
+
+      <!-- NUME COMPLET -->
+      <label class="field">
+        <span class="field__label">Nume complet</span>
+        <input class="field__input" type="text" name="fullName" placeholder="ex: Lando Norris" required />
+      </label>
+
+      <!-- ȚARĂ (text liber) -->
+      <label class="field">
+        <span class="field__label">Țară</span>
+        <input class="field__input" type="text" name="country" placeholder="ex: România" required />
+      </label>
+
+      <!-- ECHIPĂ (text liber) -->
+      <label class="field">
+        <span class="field__label">Echipă</span>
+        <input class="field__input" type="text" name="team" placeholder="ex: McLaren" required />
+      </label>
+
+      <!-- IMAGINE PROFIL -->
+      <label class="field">
+        <span class="field__label">Imagine profil</span>
+        <input class="field__input" type="file" name="avatar" accept="image/*" />
+        <small class="field__hint" style="opacity:.8">PNG/JPG, max ~5MB</small>
+      </label>
+
+      <!-- ACTIONS -->
+      <div class="actions">
+        <button type="submit" class="btn btn--white">Creează cont</button>
+        <a class="btn btn--white" (click)="changeToLogin()">Am deja cont</a>
+      </div>
+    </form>
+  </div>
+</section>
+

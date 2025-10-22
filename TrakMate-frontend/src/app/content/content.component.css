@@ -177,3 +177,10 @@
   .tm-intro__title { font-size: 2rem; }
   .tm-intro__subtitle { font-size: 1rem; }
 }
+
+.tm-hero__ctas {
+  display: inline-flex;
+  gap: 1rem;
+  align-items: center;
+}
+
