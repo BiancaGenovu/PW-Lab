@@ -17,8 +17,8 @@ export class NavBarComponent {
     this.router.navigate(['/piloti']); // make sure route matches
   }
 
-  changeToCircuite() {
-    this.router.navigate(["/circuite"]); // make sure route matches
+  changeToCircuites() {
+    this.router.navigate(["/circuites"]); // make sure route matches
   }
 
   changeToHomePage() {

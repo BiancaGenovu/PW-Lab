@@ -1,8 +1,17 @@
 /* ===== HERO (FULL SCREEN WIDTH) ===== */
+
+.tm-hero,
+.tm-intro {
+  width: 100%;
+  max-width: 100%;
+  margin-left: 0;
+  box-sizing: border-box;
+}
+
 .tm-hero {
   position: relative;
-  width: 100vw;                         /* ocupă întreaga lățime vizibilă */
-  margin-left: calc(-50vw + 50%);       /* elimină marginile implicite Angular */
+  width: 100%;                         /* ocupă întreaga lățime vizibilă */
+  margin-left: 0;      /* elimină marginile implicite Angular */
   min-height: 100vh;                    /* ocupă toată înălțimea ecranului */
   display: flex;
   align-items: center;
@@ -129,8 +138,8 @@
 
 /* ===== INTRO (full-width + fundal negru) ===== */
 .tm-intro {
-  width: 100vw;                              /* ocupă toată lățimea ecranului */
-  margin-left: calc(-50vw + 50%);            /* elimină marginile implicite Angular */
+  width: 100%;                              /* ocupă toată lățimea ecranului */
+  margin-left: 0;            /* elimină marginile implicite Angular */
   background: #0f0f10;                       /* fundal negru curat */
   padding: 6rem 2rem;                        /* spațiu sus-jos */
   border-top: 1px solid rgba(225,6,0,0.25);  /* linie subtilă roșie sus */
