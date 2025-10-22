@@ -1,0 +1,56 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  Pilot
+  Admin
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  name      String?
+  password  String   // stochezi HASH (bcrypt/argon2), nu plain
+  role      Role     @default(Pilot)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  times     Time[]
+}
+
+model Circuit {
+  id        Int      @id @default(autoincrement())
+  name      String
+  km        Float
+  country   String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  times     Time[]
+
+  @@unique([name, country])    // evită duplicate (ex: Monza, IT)
+  @@index([country])
+}
+
+model Time {
+  id         Int      @id @default(autoincrement())
+  pilotId    Int
+  circuitId  Int
+  lapTimeMs  Int      // timpul efectiv în milisecunde (1:34.527 -> 94527)
+  createdAt  DateTime @default(now())
+
+  pilot      User     @relation(fields: [pilotId], references: [id], onDelete: Cascade)
+  circuit    Circuit  @relation(fields: [circuitId], references: [id], onDelete: Cascade)
+
+  @@index([pilotId])
+  @@index([circuitId])
+  @@index([lapTimeMs])
+  @@index([pilotId, circuitId])
+}
