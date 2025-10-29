@@ -10,7 +10,7 @@ export class CircuitesService {
 
   getCircuites(): Observable<circuitesModel[]> {
     // dacă backend-ul pornește pe 3000 și rutele sunt /api/circuits
-    return this.http.get<circuitesModel[]>(`${environment.backend_api}/api/circuits`);
+    return this.http.get<circuitesModel[]>(`${environment.backend_api}/api/circuites`);
 
   }
 }
