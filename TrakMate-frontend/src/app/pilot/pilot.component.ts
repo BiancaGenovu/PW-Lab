@@ -3,8 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms'; 
 import { PilotService } from '../services/pilot.service';
 import { pilotModel } from '../shared/pilotModel';
-import { FooterComponent } from "../../../TrakMate-frontend/src/app/footer/footer.component";
-import { NavBarComponent } from "../../../TrakMate-frontend/src/app/nav-bar/nav-bar.component";
+import { FooterComponent } from '../footer/footer.component';
+import { NavBarComponent } from '../nav-bar/nav-bar.component';
 
 @Component({
   selector: 'app-pilot',

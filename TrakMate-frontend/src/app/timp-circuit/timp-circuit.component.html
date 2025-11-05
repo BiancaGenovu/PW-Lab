@@ -1,0 +1,64 @@
+<app-nav-bar></app-nav-bar>
+
+<section class="page">
+  <header class="page__header">
+    <h1>Timpi înregistrați pe {{ circuitName }}</h1>
+    <p class="muted">Total: {{ times.length }} înregistrare{{ times.length === 1 ? '' : 'i' }}.</p>
+  </header>
+
+  <div class="toolbar">
+    <button class="btn ghost" (click)="router.navigate(['/circuites'])">← Înapoi la Circuite</button>
+
+    <select [(ngModel)]="sortBy" (change)="applySort()" class="sel">
+      <option value="time">Sortează: Cel mai rapid timp</option>
+      <option value="date">Sortează: Data (cel mai recent)</option>
+    </select>
+
+    <button class="btn" (click)="showForm = !showForm">{{ showForm ? 'Anulează' : 'Adaugă timp' }}</button>
+  </div>
+
+  <form class="add-time" *ngIf="showForm" (ngSubmit)="submitNewTime()">
+    <div class="row">
+      <input type="text" placeholder="Prenume (ex. Lando)" [(ngModel)]="form.firstName" name="firstName" required />
+      <input type="text" placeholder="Nume (ex. Norris)" [(ngModel)]="form.lastName" name="lastName" required />
+      <input type="text" placeholder="Timp (MM:SS.mmm sau ms)" [(ngModel)]="form.lapTime" name="lapTime" required />
+      <button class="btn" type="submit">Salvează</button>
+    </div>
+    <p class="muted">Exemple: <code>01:23.250</code> sau <code>83250</code> (ms)</p>
+  </form>
+
+  <div class="empty" *ngIf="loading">
+    <p>Se încarcă timpii...</p>
+    <div class="skeleton-table"></div>
+  </div>
+
+  <div class="empty" *ngIf="!loading && !times.length">
+    <div class="empty__card">
+      <h3>Niciun timp înregistrat</h3>
+      <p class="muted">Acest circuit nu are încă timpi.</p>
+    </div>
+  </div>
+
+  <div class="table-container" *ngIf="!loading && times.length">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Pilot</th>
+          <th>Timp tur</th>
+          <th>Data</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let time of times; let i = index">
+          <td><span class="rank" *ngIf="i === 0">🥇</span><span *ngIf="i > 0">{{ i + 1 }}</span></td>
+          <td>{{ time.pilot.firstName }} {{ time.pilot.lastName }}</td>
+          <td><span class="lap-time" [class.best-lap]="i === 0">{{ formatLapTime(time.lapTimeMs) }}</span></td>
+          <td>{{ time.createdAt | date: 'mediumDate' }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<app-footer></app-footer>

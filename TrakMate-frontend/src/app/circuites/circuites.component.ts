@@ -24,7 +24,7 @@ export class CircuitesComponent implements OnInit {
   country = '';
   sortBy: 'name' | 'km' = 'name';
 
-  constructor(private circuitesService: CircuitesService, private router: Router) {}
+ constructor(private circuitesService: CircuitesService, public router: Router) {}
 
   ngOnInit(): void {
     // focus pe search cu tasta "/"
@@ -79,9 +79,13 @@ export class CircuitesComponent implements OnInit {
     this.q = ''; this.country = ''; this.sortBy = 'name'; this.applyFilters();
   }
 
+  
+
   circuiteDetails(circuiteID: number, circuiteName: string): void {
-    this.router.navigate(['/circuites', circuiteID, 'members'], {
-      state: { circuiteName }
-    });
-  }
+  // ATENȚIE: Ruta trebuie să fie '/circuites/:circuitId/times'
+  // Trimitem ID-ul circuitului (circuiteID) și numele (circuiteName) prin state.
+  this.router.navigate(['/circuites', circuiteID, 'times'], {
+    state: { circuitName: circuiteName } // Trimiți numele pentru a fi afișat în header-ul paginii noi
+  });
+}
 }

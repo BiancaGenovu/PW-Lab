@@ -6,6 +6,7 @@ import { AboutUsComponent } from './about-us/about-us.component';
 import { PilotComponent } from './pilot/pilot.component';
 import { LoginComponent } from './login/login.component';
 import { RegisterComponent } from './register/register.component';
+import { TimpCircuitComponent } from './timp-circuit/timp-circuit.component';
 
 export const routes: Routes = [
     
@@ -15,7 +16,9 @@ export const routes: Routes = [
   {path: "pilot", component : PilotComponent },
   {path: "about-us", component : AboutUsComponent },
   {path: "login", component : LoginComponent },
-  {path: "register",component: RegisterComponent}
+  {path: "register",component: RegisterComponent},
+  {path: 'circuites/:circuitId/times',
+  component: TimpCircuitComponent}
 
 ];
 

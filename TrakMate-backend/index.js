@@ -7,7 +7,6 @@ const { PrismaClient } = require('@prisma/client');
 const app = express();
 const prisma = new PrismaClient();
 
-// ===== middleware
 app.use(cors());
 app.use(express.json());
 
@@ -19,7 +18,6 @@ app.get('/health', (_req, res) => res.send('OK'));
 // GET /api/pilot -> listă utilizatori
 app.get('/api/pilot', async (_req, res) => {
   try {
-    // Schimbat de la prisma.user la prisma.appUser
     const users = await prisma.appUser.findMany({
       orderBy: { id: 'asc' },
       select: { id: true, email: true, firstName: true, lastName: true, role: true, createdAt: true }
@@ -31,14 +29,13 @@ app.get('/api/pilot', async (_req, res) => {
   }
 });
 
-// POST /api/pilot -> creează utilizator (NOTĂ: pune HASH la parolă în producție)
+// POST /api/pilot -> creează utilizator (NOTE: pune HASH în producție)
 app.post('/api/pilot', async (req, res) => {
   try {
     const { email, firstName, lastName, password, role = 'Pilot' } = req.body;
     if (!email || !password || !firstName || !lastName) {
       return res.status(400).json({ error: 'email, password, firstName, lastName required' });
     }
-    // Schimbat de la prisma.user la prisma.appUser
     const created = await prisma.appUser.create({
       data: { email, firstName, lastName, password, role }
     });
@@ -84,18 +81,39 @@ app.post('/api/circuites', async (req, res) => {
 
 // ===== TIMES (laps)
 
-// GET /api/times -> timpi cu pilot & circuit
-app.get('/api/times', async (_req, res) => {
+// util: parsează "MM:SS.mmm" sau milisecunde numerice
+function parseLapToMs(input) {
+  if (typeof input === 'number') return input;
+  const s = String(input).trim();
+  if (/^\d+$/.test(s)) return Number(s); // doar ms
+
+  // MM:SS.mmm (sau M:SS.mmm)
+  const m = s.match(/^(\d+):([0-5]?\d)\.(\d{1,3})$/);
+  if (!m) throw new Error('Invalid lap time format (use ms or MM:SS.mmm)');
+  const minutes = Number(m[1]);
+  const seconds = Number(m[2]);
+  const millis  = Number(m[3].padEnd(3, '0'));
+  return minutes * 60_000 + seconds * 1_000 + millis;
+}
+
+// GET /api/circuites/:circuitId/times -> toți timpii pentru circuit
+app.get('/api/circuites/:circuitId/times', async (req, res) => {
   try {
-    // Schimbat de la prisma.time la prisma.timeRecord
+    const circuitId = Number(req.params.circuitId);
+    if (!circuitId) return res.status(400).json({ error: 'Invalid circuitId' });
+
     const times = await prisma.timeRecord.findMany({
-      orderBy: { lapTimeMs: 'asc' },
-      include: {
-        // Obiectul pilot este acum modelul AppUser
-        pilot: { select: { id: true, firstName: true, lastName: true, email: true, role: true } },
-        circuit: true
-      }
+      where: { circuitId },
+      select: {
+        id: true,
+        lapTimeMs: true,
+        createdAt: true,
+        pilot:   { select: { id: true, firstName: true, lastName: true } },
+        circuit: { select: { id: true, name: true } }
+      },
+      orderBy: { lapTimeMs: 'asc' }
     });
+
     res.json(times);
   } catch (e) {
     console.error(e);
@@ -103,21 +121,45 @@ app.get('/api/times', async (_req, res) => {
   }
 });
 
-// POST /api/times -> adaugă timp
-app.post('/api/times', async (req, res) => {
+// POST /api/circuites/:circuitId/times -> adaugă timp după numele pilotului
+app.post('/api/circuites/:circuitId/times', async (req, res) => {
   try {
-    const { pilotId, circuitId, lapTimeMs } = req.body;
-    if (!pilotId || !circuitId || lapTimeMs == null) {
-      return res.status(400).json({ error: 'pilotId, circuitId, lapTimeMs required' });
+    const circuitId = Number(req.params.circuitId);
+    const { firstName, lastName, lapTime } = req.body;
+
+    if (!circuitId) return res.status(400).json({ error: 'Invalid circuitId' });
+    if (!firstName || !lastName || lapTime == null) {
+      return res.status(400).json({ error: 'firstName, lastName, lapTime required' });
     }
-    // Schimbat de la prisma.time la prisma.timeRecord
+
+    const pilot = await prisma.appUser.findFirst({
+      where: {
+        firstName: { equals: String(firstName).trim(), mode: 'insensitive' },
+        lastName:  { equals: String(lastName).trim(),  mode: 'insensitive' },
+        role: 'Pilot',
+        isActive: true
+      },
+      select: { id: true, firstName: true, lastName: true }
+    });
+    if (!pilot) return res.status(404).json({ error: 'Pilot not found' });
+
+    const lapTimeMs = parseLapToMs(lapTime);
+
     const created = await prisma.timeRecord.create({
       data: {
-        pilotId: Number(pilotId),
-        circuitId: Number(circuitId),
-        lapTimeMs: Number(lapTimeMs)
+        pilotId: pilot.id,
+        circuitId,
+        lapTimeMs
+      },
+      select: {
+        id: true,
+        lapTimeMs: true,
+        createdAt: true,
+        pilot:   { select: { id: true, firstName: true, lastName: true } },
+        circuit: { select: { id: true, name: true } }
       }
     });
+
     res.status(201).json(created);
   } catch (e) {
     console.error(e);
@@ -125,10 +167,9 @@ app.post('/api/times', async (req, res) => {
   }
 });
 
-// ===== start server
+// ===== start
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  // Log de debug actualizat
-  console.log('Prisma models:', Object.keys(prisma)); // trebuie să vezi 'appUser', 'circuit', 'timeRecord'
+  console.log('Prisma models:', Object.keys(prisma));
   console.log(`API running on http://localhost:${PORT}`);
 });

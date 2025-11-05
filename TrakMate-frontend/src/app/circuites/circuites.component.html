@@ -31,7 +31,6 @@
     </div>
   </header>
 
-  <!-- filtre rapide pe țări (se umplu din date) -->
   <div class="chips" *ngIf="countries.length">
     <button
       class="chip"
@@ -50,7 +49,6 @@
     </button>
   </div>
 
-  <!-- empty state -->
   <div class="empty" *ngIf="!loading && filtered.length === 0">
     <div class="empty__card">
       <h3>Nu am găsit nimic</h3>
@@ -59,9 +57,8 @@
     </div>
   </div>
 
-  <!-- grid cu carduri -->
   <div class="grid" *ngIf="!loading && filtered.length">
-    <article class="card" *ngFor="let c of filtered" (click)="circuiteDetails(c.id, c.name)">
+    <article class="card" *ngFor="let c of filtered"> 
       <div class="card__head">
         <h3 class="card__title">{{ c.name }}</h3>
         <span class="badge">{{ c.country }}</span>
@@ -75,12 +72,11 @@
       </div>
 
       <div class="card__actions">
-        <button class="btn small" (click)="circuiteDetails(c.id, c.name); $event.stopPropagation()">Detalii</button>
+        <button class="btn small" (click)="circuiteDetails(c.id, c.name)">Detalii</button> 
       </div>
     </article>
   </div>
 
-  <!-- skeleton (opțional) -->
   <div class="grid" *ngIf="loading">
     <div class="skeleton" *ngFor="let _ of [0,1,2,3,4,5,6,7]"></div>
   </div>
