@@ -5,6 +5,7 @@ import cors from 'cors';
 import pilotsRoutes from './modules/pilot/pilot.routes.js'; 
 import circuitesRoutes from './modules/circuites/circuites.routes.js'; // <<< ESENȚIAL
 import timeRoutes from './modules/time/time.routes.js';
+import timePilotRoutes from './modules/timePilot/timePilot.routes.js';
 
 const app = express();
 
@@ -16,6 +17,7 @@ app.use(express.json());
 app.use('/api/pilot', pilotsRoutes);
 app.use('/api/circuites', circuitesRoutes); // <<< AICI SE FACE CONEXIUNEA CU RUTA DE ID
 app.use('/api/time', timeRoutes);
+app.use('/api/timePilot', timePilotRoutes);
 
 app.get('/health', (_req, res) => res.send('OK'));
 

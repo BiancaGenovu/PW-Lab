@@ -7,7 +7,6 @@ export interface PilotMeta {
 export interface CircuitMeta {
   id: number;
   name: string;
-  country: string;
 }
 
 export interface TimeModel {

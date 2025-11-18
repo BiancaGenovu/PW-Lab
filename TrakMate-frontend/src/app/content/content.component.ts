@@ -13,4 +13,8 @@ constructor(private router: Router) {}
    changeToLogin() {
     this.router.navigate(['/login']);
 }
+
+changeToCircuites() {
+    this.router.navigate(['/circuites']);
+}
 }

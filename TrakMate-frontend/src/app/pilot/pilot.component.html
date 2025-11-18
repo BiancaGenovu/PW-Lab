@@ -1,47 +1,47 @@
 <app-nav-bar></app-nav-bar>
 
 <section class="page">
-  <header class="page__header">
-    <div>
-      <h1>Piloții TrakMate</h1>
-      <p class="muted">
-        {{ filtered.length }} pilot{{ filtered.length === 1 ? '' : 'i' }} găsit{{ filtered.length === 1 ? '' : 'i' }}.
-      </p>
-    </div>
+  <header class="page__header">
+    <div>
+      <h1>Piloții TrakMate</h1>
+      <p class="muted">
+        {{ filtered.length }} pilot{{ filtered.length === 1 ? '' : 'i' }} găsit{{ filtered.length === 1 ? '' : 'i' }}.
+      </p>
+    </div>
 
-    <div class="toolbar">
-      <div class="search">
-        <input
-          type="text"
-          placeholder="Caută după nume sau prenume…"
-          [(ngModel)]="q"
-          (input)="applyFilters()"
-        />
-        <span class="kbd">/</span>
-      </div>
+    <div class="toolbar">
+      <div class="search">
+        <input
+          type="text"
+          placeholder="Caută după nume sau prenume…"
+          [(ngModel)]="q"
+          (input)="applyFilters()"
+        />
+        <span class="kbd">/</span>
+      </div>
 
-      <select [(ngModel)]="sortBy" (change)="applyFilters()" class="sel">
-        <option value="lastName">Sortează: Nume de familie (A–Z)</option>
-        <option value="firstName">Sortează: Prenume (A–Z)</option>
-      </select>
+      <select [(ngModel)]="sortBy" (change)="applyFilters()" class="sel">
+        <option value="lastName">Sortează: Nume de familie (A–Z)</option>
+        <option value="firstName">Sortează: Prenume (A–Z)</option>
+      </select>
 
-      <button class="btn ghost" (click)="clearFilters()" [disabled]="!q">
-        Reset filtre
-      </button>
-    </div>
-  </header>
+      <button class="btn ghost" (click)="clearFilters()" [disabled]="!q">
+        Reset filtre
+      </button>
+    </div>
+  </header>
 
-  <div class="empty" *ngIf="!loading && filtered.length === 0">
-    <div class="empty__card">
-      <h3>Nu am găsit niciun pilot</h3>
-      <p class="muted">Încearcă alt termen de căutare sau scoate filtrele.</p>
-      <button class="btn" (click)="clearFilters()">Resetează filtrele</button>
-    </div>
-  </div>
+  <div class="empty" *ngIf="!loading && filtered.length === 0">
+    <div class="empty__card">
+      <h3>Nu am găsit niciun pilot</h3>
+      <p class="muted">Încearcă alt termen de căutare sau scoate filtrele.</p>
+      <button class="btn" (click)="clearFilters()">Resetează filtrele</button>
+    </div>
+  </div>
 
-  <div class="grid" *ngIf="loading">
-    <div class="skeleton" *ngFor="let _ of [0,1,2,3,4,5,6,7]"></div>
-  </div>
+  <div class="grid" *ngIf="loading">
+    <div class="skeleton" *ngFor="let _ of [0,1,2,3,4,5,6,7]"></div>
+  </div>
 
   <div class="grid" *ngIf="!loading && filtered.length">
     <article class="card" *ngFor="let p of filtered">
@@ -50,10 +50,12 @@
       </div>
       
       <div class="card__meta">
-        </div>
+        <!-- Loc pentru metadate suplimentare (ex: Rol) -->
+      </div>
       
       <div class="card__actions">
-        <button class="btn small">Vezi Timpi</button>
+        <!-- Modificat: Apelează noua funcție de navigare -->
+        <button class="btn small" (click)="viewPilotTimes(p)">Vezi Timpi</button> 
       </div>
     </article>
   </div>

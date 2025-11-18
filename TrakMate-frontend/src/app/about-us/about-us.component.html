@@ -1,1 +1,86 @@
-<p>about-us works!</p>
+<app-nav-bar></app-nav-bar>
+<section class="tm-hero tm-hero--about">
+  <div class="tm-hero__bg"></div>
+  <div class="tm-hero__overlay"></div>
+
+  <div class="tm-hero__content">
+    <h1 class="tm-hero__title">Despre <span class="accent">TrackMate</span></h1>
+    <p class="tm-hero__subtitle">
+      Construim cel mai prietenos loc unde piloții și fanii F1 își pot urmări, compara și îmbunătăți timpii pe orice circuit.
+    </p>
+    <div class="tm-hero__ctas">
+      <a class="btn btn--ghost" routerLink="/circuite">Vezi circuite</a>
+      <a class="btn" routerLink="/register">Începe acum</a>
+    </div>
+  </div>
+</section>
+
+<section class="about">
+  <div class="content">
+    <!-- Misiune + Valori -->
+    <div class="grid-2">
+      <div class="card">
+        <h2 class="title">Misiunea noastră</h2>
+        <p class="muted">
+          Să oferim instrumente clare și rapide pentru cronometrare, analiză și progres —
+          astfel încât fiecare tur să fie mai bun ca ultimul.
+        </p>
+        <ul class="bullets">
+          <li>Analiză de performanță pe tur</li>
+          <li>Clasamente dinamice pe circuite</li>
+          <li>Profil pilot cu istoricul timpilor</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h2 class="title">Valorile noastre</h2>
+        <div class="chips">
+          <span class="chip">Precizie</span>
+          <span class="chip">Transparență</span>
+          <span class="chip">Viteză</span>
+          <span class="chip">Comunitate</span>
+        </div>
+        <p class="muted">Date curate, UI simplu și rezultate care contează.</p>
+      </div>
+    </div>
+
+
+    <!-- Cronologie -->
+    <h2 class="section-head">Cronologia TrackMate</h2>
+    <ol class="timeline">
+      <li>
+        <span class="dot"></span>
+        <div class="tl-card">
+          <h4>Lansare prototip</h4>
+          <p class="muted small">MVP cu liste de circuite și timpi înregistrați.</p>
+        </div>
+      </li>
+      <li>
+        <span class="dot"></span>
+        <div class="tl-card">
+          <h4>Profil pilot</h4>
+          <p class="muted small">Istoricul timpilor pe toate circuitele + clasamente.</p>
+        </div>
+      </li>
+      <li>
+        <span class="dot"></span>
+        <div class="tl-card">
+          <h4>Analitice</h4>
+          <p class="muted small">Grafice și insight-uri dinamic calculate.</p>
+        </div>
+      </li>
+    </ol>
+
+    <!-- CTA -->
+    <div class="cta">
+      <h3>Alătură-te comunității Track<span class="accent">Mate</span></h3>
+      <p class="muted">Înregistrează timpi, urmărește progresul, urcă în clasament.</p>
+      <div class="cta__actions">
+        <a class="btn" routerLink="/register">Creează cont</a>
+        <a class="btn btn--ghost" routerLink="/login">Am deja cont</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<app-footer></app-footer>

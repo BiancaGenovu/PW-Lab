@@ -1,0 +1,73 @@
+<app-nav-bar></app-nav-bar>
+
+<section class="page">
+  <header class="page__header">
+    <h1>Timpi înregistrați de {{ pilotName }}</h1>
+    <p class="muted">
+      Total: {{ times.length }} tur{{ times.length === 1 ? '' : 'uri' }} înregistrate pe diverse circuite.
+    </p>
+  </header>
+
+  <div class="toolbar">
+    <button class="btn ghost" (click)="router.navigate(['/pilot'])">← Înapoi la Piloți</button>
+
+    <select [(ngModel)]="sortBy" (change)="applySort()" class="sel">
+      <option value="time">Sortează: Cel mai rapid timp</option>
+      <option value="date">Sortează: Data (cel mai recent)</option>
+    </select>
+
+    <!-- ADĂUGAT: toggle formular -->
+    <button class="btn" (click)="showForm = !showForm">
+      {{ showForm ? 'Anulează' : 'Adaugă timp' }}
+    </button>
+  </div>
+
+  <!-- ADĂUGAT: formular creare timp pentru pilot -->
+  <form class="add-time" *ngIf="showForm" (ngSubmit)="submitNewTime()">
+    <div class="row">
+      <input type="text" placeholder="Circuit (ex. Silverstone)" [(ngModel)]="form.circuitName" name="circuitName" required />
+      <input type="text" placeholder="Țară (ex. Marea Britanie)" [(ngModel)]="form.country" name="country" required />
+      <input type="text" placeholder="Timp (MM:SS.mmm sau ms)" [(ngModel)]="form.lapTime" name="lapTime" required />
+      <button class="btn" type="submit">Salvează</button>
+    </div>
+    <p class="muted">Exemple: <code>01:23.250</code> sau <code>83250</code> (ms)</p>
+  </form>
+
+  <!-- loading / empty / table — neschimbate -->
+  <div class="empty" *ngIf="loading">
+    <p>Se încarcă timpii pilotului {{ pilotName }}...</p>
+    <div class="skeleton-table"></div>
+  </div>
+
+  <div class="empty" *ngIf="!loading && times.length === 0">
+    <div class="empty__card">
+      <h3>Niciun timp înregistrat</h3>
+      <p class="muted">Pilotul {{ pilotName }} nu are încă timpi în baza de date.</p>
+    </div>
+  </div>
+
+  <div class="table-container" *ngIf="!loading && times.length">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Circuit</th>
+          <th>Timp Tur</th>
+          <th>Țară</th>
+          <th>Data</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let time of times; let i = index">
+          <td><span class="rank" *ngIf="i === 0">🏆</span><span *ngIf="i > 0">{{ i + 1 }}</span></td>
+          <td>{{ time.circuit.name }}</td>
+          <td><span class="lap-time" [class.best-lap]="i === 0">{{ formatLapTime(time.lapTimeMs) }}</span></td>
+          <td>{{ time.circuit.country }}</td>
+          <td>{{ time.createdAt | date: 'mediumDate' }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<app-footer></app-footer>

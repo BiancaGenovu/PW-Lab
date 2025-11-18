@@ -4,9 +4,13 @@ const express = require('express');
 const cors = require('cors');
 const { PrismaClient } = require('@prisma/client');
 
+// Importă funcțiile de model necesare din module
+const { getTimesByPilotId } = require('./modules/timePilot/timePilot.model.js');
+
 const app = express();
 const prisma = new PrismaClient();
 
+// ===== middleware
 app.use(cors());
 app.use(express.json());
 
@@ -81,6 +85,21 @@ app.post('/api/circuites', async (req, res) => {
 
 // ===== TIMES (laps)
 
+// GET /api/timePilot/:pilotId -> toți timpii pentru un pilot anume
+app.get('/api/timePilot/:pilotId', async (req, res) => {
+  try {
+    const { pilotId } = req.params;
+    if (!pilotId) {
+      return res.status(400).json({ error: 'Pilot ID is required' });
+    }
+    const times = await getTimesByPilotId(pilotId);
+    res.json(times);
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'DB error', detail: String(e.message || e) });
+  }
+});
+
 // util: parsează "MM:SS.mmm" sau milisecunde numerice
 function parseLapToMs(input) {
   if (typeof input === 'number') return input;
@@ -96,7 +115,7 @@ function parseLapToMs(input) {
   return minutes * 60_000 + seconds * 1_000 + millis;
 }
 
-// GET /api/circuites/:circuitId/times -> toți timpii pentru circuit
+// GET /api/circuites/:circuitId/times -> toți timpii pentru un circuit
 app.get('/api/circuites/:circuitId/times', async (req, res) => {
   try {
     const circuitId = Number(req.params.circuitId);
@@ -146,11 +165,7 @@ app.post('/api/circuites/:circuitId/times', async (req, res) => {
     const lapTimeMs = parseLapToMs(lapTime);
 
     const created = await prisma.timeRecord.create({
-      data: {
-        pilotId: pilot.id,
-        circuitId,
-        lapTimeMs
-      },
+      data: { pilotId: pilot.id, circuitId, lapTimeMs },
       select: {
         id: true,
         lapTimeMs: true,
@@ -164,6 +179,48 @@ app.post('/api/circuites/:circuitId/times', async (req, res) => {
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: 'DB error', detail: String(e.message || e) });
+  }
+});
+
+// POST /api/timePilot/:pilotId/times -> adaugă timp pentru un pilot (circuit după nume+țară)
+app.post('/api/timePilot/:pilotId/times', async (req, res) => {
+  try {
+    const pilotId = Number(req.params.pilotId);
+    const { circuitName, country, lapTime } = req.body;
+
+    if (!pilotId) return res.status(400).json({ message: 'Invalid pilotId' });
+    if (!circuitName || !country || lapTime == null) {
+      return res.status(400).json({ message: 'circuitName, country, lapTime required' });
+    }
+
+    // caută circuitul după nume + țară (case-insensitive, doar active)
+    const circuit = await prisma.circuit.findFirst({
+      where: {
+        name:    { equals: String(circuitName).trim(), mode: 'insensitive' },
+        country: { equals: String(country).trim(),     mode: 'insensitive' },
+        isActive: true
+      },
+      select: { id: true, name: true, country: true }
+    });
+    if (!circuit) return res.status(400).json({ message: 'Circuit not found' });
+
+    const lapTimeMs = parseLapToMs(lapTime);
+
+    const created = await prisma.timeRecord.create({
+      data: { pilotId, circuitId: circuit.id, lapTimeMs },
+      select: {
+        id: true,
+        lapTimeMs: true,
+        createdAt: true,
+        pilot:   { select: { id: true, firstName: true, lastName: true } },
+        circuit: { select: { id: true, name: true, country: true } }
+      }
+    });
+
+    res.status(201).json(created);
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ message: 'DB error', detail: String(e.message || e) });
   }
 });
 
