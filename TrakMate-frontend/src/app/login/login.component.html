@@ -1,23 +1,49 @@
 <app-nav-bar></app-nav-bar>
+
 <section class="auth">
   <div class="auth-card">
     <h1 class="auth-title">Conectare</h1>
-    <p class="auth-subtitle">Intră în contul tău Track<span class="accent">Mate</span></p>
+    <p class="auth-subtitle">
+      Intră în contul tău Track<span class="accent">Mate</span>
+    </p>
 
-    <form class="auth-form" autocomplete="on">
+    <!-- Formular legat la TS -->
+    <form class="auth-form" autocomplete="on" (ngSubmit)="onSubmit()" #loginForm="ngForm">
       <label class="field">
-        <span class="field__label">User</span>
-        <input class="field__input" type="text" name="username" placeholder="ex: lando_norris" required />
+        <span class="field__label">Email</span>
+        <input
+          class="field__input"
+          type="email"
+          name="email"
+          [(ngModel)]="email"
+          placeholder="ex: lando@norris.test"
+          required
+        />
       </label>
 
       <label class="field">
         <span class="field__label">Parolă</span>
-        <input class="field__input" type="password" name="password" placeholder="••••••••" required />
+        <input
+          class="field__input"
+          type="password"
+          name="password"
+          [(ngModel)]="password"
+          placeholder="••••••••"
+          required
+        />
       </label>
 
+      <!-- EROARE SIMPLĂ (optional) -->
+      <p class="auth-error" *ngIf="error">{{ error }}</p>
+
       <div class="actions">
-        <button type="submit" class="btn btn--white">Conectare</button>
-        <a class="btn btn--white" (click)="changeToRegister()">Register now</a>
+        <button type="submit" class="btn btn--white" [disabled]="loading">
+          {{ loading ? 'Se conectează...' : 'Conectare' }}
+        </button>
+
+        <button type="button" class="btn btn--white" (click)="changeToRegister()">
+          Register now
+        </button>
       </div>
     </form>
   </div>

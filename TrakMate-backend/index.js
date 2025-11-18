@@ -6,6 +6,8 @@ const { PrismaClient } = require('@prisma/client');
 
 // Importă funcțiile de model necesare din module
 const { getTimesByPilotId } = require('./modules/timePilot/timePilot.model.js');
+// IMPORT NOU: routerul de auth
+const authRouter = require('./modules/auth/auth.routes.js');
 
 const app = express();
 const prisma = new PrismaClient();
@@ -16,6 +18,9 @@ app.use(express.json());
 
 // ===== healthcheck
 app.get('/health', (_req, res) => res.send('OK'));
+
+// ===== AUTH (login/register) – montăm routerul /api/auth
+app.use('/api/auth', authRouter);
 
 // ===== USERS (pilots/admins)
 
@@ -33,7 +38,7 @@ app.get('/api/pilot', async (_req, res) => {
   }
 });
 
-// POST /api/pilot -> creează utilizator (NOTE: pune HASH în producție)
+// POST /api/pilot -> creează utilizator (NOTE: pune HASH în producție sau folosește /api/auth/register)
 app.post('/api/pilot', async (req, res) => {
   try {
     const { email, firstName, lastName, password, role = 'Pilot' } = req.body;
