@@ -35,31 +35,28 @@ export class LoginComponent {
 
     this.loading = true;
     this.authService.login(this.email, this.password).subscribe({
-      next: (res) => {
-        this.loading = false;
+  next: (res: any) => {
+    this.loading = false;
 
-        const token = res?.token;
-        if (token) {
-          this.authService.saveToken(token);
-        }
+    const token = res?.token;
+    if (token) {
+      this.authService.saveToken(token);
+    }
 
-        // Poți salva și user-ul dacă vrei
-        if (res?.user) {
-          localStorage.setItem('currentUser', JSON.stringify(res.user));
-        }
+    if (res?.user) {
+      this.authService.saveCurrentUser(res.user)
+    }
 
-        // după login reușit, du-l pe home (sau altă pagină)
-        this.router.navigate(['/']);
-      },
-      error: (err) => {
-        this.loading = false;
-        this.error = err?.error?.message || 'Conectarea a eșuat.';
-        alert(this.error);
-      }
-    });
+    this.router.navigate(['/']);
+  },
+  error: (err: any) => {
+    this.loading = false;
+    alert(err?.error?.message || 'Conectarea a eșuat.');
+  }
+});
   }
 
   changeToRegister() {
     this.router.navigate(['/register']);
-  }
+}
 }

@@ -3,50 +3,114 @@
 <section class="auth">
   <div class="auth-card">
     <h1 class="auth-title">Înregistrare</h1>
-    <p class="auth-subtitle">Creează-ți cont pe Track<span class="accent">Mate</span></p>
+    <p class="auth-subtitle">
+      Creează-ți cont pe Track<span class="accent">Mate</span>
+    </p>
 
-    <form class="auth-form" autocomplete="on" enctype="multipart/form-data">
-      <!-- USER -->
+    <form
+      class="auth-form"
+      autocomplete="on"
+      enctype="multipart/form-data"
+      (ngSubmit)="onSubmit()"
+      #registerForm="ngForm"
+    >
+      <!-- EMAIL -->
       <label class="field">
-        <span class="field__label">User</span>
-        <input class="field__input" type="text" name="username" placeholder="ex: lando_norris" required />
+        <span class="field__label">Email</span>
+        <input
+          class="field__input"
+          type="email"
+          name="email"
+          [(ngModel)]="email"
+          placeholder="ex: lando@norris.test"
+          required
+        />
       </label>
 
       <!-- PAROLĂ -->
       <label class="field">
         <span class="field__label">Parolă</span>
-        <input class="field__input" type="password" name="password" placeholder="••••••••" required />
+        <input
+          class="field__input"
+          type="password"
+          name="password"
+          [(ngModel)]="password"
+          placeholder="••••••••"
+          required
+        />
       </label>
 
-      <!-- NUME COMPLET -->
+      <!-- PRENUME -->
       <label class="field">
-        <span class="field__label">Nume complet</span>
-        <input class="field__input" type="text" name="fullName" placeholder="ex: Lando Norris" required />
+        <span class="field__label">Prenume</span>
+        <input
+          class="field__input"
+          type="text"
+          name="firstName"
+          [(ngModel)]="firstName"
+          placeholder="ex: Lando"
+          required
+        />
       </label>
 
-      <!-- ȚARĂ (text liber) -->
+      <!-- NUME -->
+      <label class="field">
+        <span class="field__label">Nume</span>
+        <input
+          class="field__input"
+          type="text"
+          name="lastName"
+          [(ngModel)]="lastName"
+          placeholder="ex: Norris"
+          required
+        />
+      </label>
+
+      <!-- ȚARĂ (momentan doar în UI, nu o trimitem încă la backend) -->
       <label class="field">
         <span class="field__label">Țară</span>
-        <input class="field__input" type="text" name="country" placeholder="ex: România" required />
+        <input
+          class="field__input"
+          type="text"
+          name="country"
+          placeholder="ex: România"
+        />
       </label>
 
-      <!-- ECHIPĂ (text liber) -->
+      <!-- ECHIPĂ (momentan doar în UI) -->
       <label class="field">
         <span class="field__label">Echipă</span>
-        <input class="field__input" type="text" name="team" placeholder="ex: McLaren" required />
+        <input
+          class="field__input"
+          type="text"
+          name="team"
+          placeholder="ex: McLaren"
+        />
       </label>
 
-      <!-- IMAGINE PROFIL -->
+      <!-- IMAGINE PROFIL (momentan nu o trimitem la backend) -->
       <label class="field">
         <span class="field__label">Imagine profil</span>
-        <input class="field__input" type="file" name="avatar" accept="image/*" />
+        <input
+          class="field__input"
+          type="file"
+          name="avatar"
+          accept="image/*"
+        />
         <small class="field__hint" style="opacity:.8">PNG/JPG, max ~5MB</small>
       </label>
 
+      <!-- EROARE SIMPLĂ -->
+      <p class="auth-error" *ngIf="error">{{ error }}</p>
+
       <!-- ACTIONS -->
       <div class="actions">
-        <button type="submit" class="btn btn--white">Creează cont</button>
-        <a class="btn btn--white" (click)="changeToLogin()">Am deja cont</a>
+        <button type="submit" class="btn btn--white" [disabled]="loading">
+          {{ loading ? 'Se creează contul...' : 'Creează cont' }}
+        </button>
+        <button type="button" class="btn btn--white" (click)="changeToLogin()">
+          Am deja cont
+        </button>
       </div>
     </form>
   </div>

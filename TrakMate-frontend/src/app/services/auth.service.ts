@@ -1,37 +1,80 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { environment } from '../shared/environment';
 import { Observable } from 'rxjs';
+import { environment } from '../shared/environment';
+import { UserProfile } from '../shared/profileModel';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-
   private apiUrl = `${environment.backend_api}/api/auth`;
+  private TOKEN_KEY = 'token';
+  private USER_KEY = 'currentUser';
 
   constructor(private http: HttpClient) {}
 
-  login(email: string, password: string): Observable<any> {
-    return this.http.post(`${this.apiUrl}/login`, { email, password });
+  // ==== API calls ====
+
+  login(email: string, password: string): Observable<{ token: string; user: UserProfile }> {
+    return this.http.post<{ token: string; user: UserProfile }>(
+      `${this.apiUrl}/login`,
+      { email, password }
+    );
   }
 
-  register(data: {
+  register(body: {
     email: string;
     password: string;
     firstName: string;
     lastName: string;
-  }): Observable<any> {
-    return this.http.post(`${this.apiUrl}/register`, data);
+  }): Observable<{ token: string; user: UserProfile }> {
+    return this.http.post<{ token: string; user: UserProfile }>(
+      `${this.apiUrl}/register`,
+      body
+    );
   }
 
-  saveToken(token: string) {
-    localStorage.setItem('token', token);
+  // ==== token management ====
+
+  saveToken(token: string): void {
+    localStorage.setItem(this.TOKEN_KEY, token);
   }
 
   getToken(): string | null {
-    return localStorage.getItem('token');
+    return localStorage.getItem(this.TOKEN_KEY);
   }
 
-  logout() {
-    localStorage.removeItem('token');
+  clearToken(): void {
+    localStorage.removeItem(this.TOKEN_KEY);
+  }
+
+  // ==== user management (opțional, folosit la profil/nav bar) ====
+
+  saveCurrentUser(user: UserProfile): void {
+    localStorage.setItem(this.USER_KEY, JSON.stringify(user));
+  }
+
+  getCurrentUser(): UserProfile | null {
+    const raw = localStorage.getItem(this.USER_KEY);
+    if (!raw) return null;
+    try {
+      return JSON.parse(raw) as UserProfile;
+    } catch {
+      return null;
+    }
+  }
+
+  clearCurrentUser(): void {
+    localStorage.removeItem(this.USER_KEY);
+  }
+
+  // ==== helpers ====
+
+  isLoggedIn(): boolean {
+    return !!this.getToken();
+  }
+
+  logout(): void {
+    this.clearToken();
+    this.clearCurrentUser();
   }
 }

@@ -8,11 +8,12 @@ import { LoginComponent } from './login/login.component';
 import { RegisterComponent } from './register/register.component';
 import { TimpCircuitComponent } from './timp-circuit/timp-circuit.component';
 import { TimpPilotComponent } from './timp-pilot/timp-pilot.component';
+import { authGuard } from './guards/auth.guard';
 
 export const routes: Routes = [
     
   { path: "", component: HomePageComponent },
-  {path : "profile", component : ProfileComponent },
+  {path : "profile", component : ProfileComponent, canActivate: [authGuard]},
   {path: "circuites", component : CircuitesComponent },
   {path: "pilot", component : PilotComponent },
   {path: "about-us", component : AboutUsComponent },

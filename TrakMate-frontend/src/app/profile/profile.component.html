@@ -1,1 +1,68 @@
-<p>profile works!</p>
+<app-nav-bar></app-nav-bar>
+<section class="profile-page">
+  <div class="profile-container">
+
+    <!-- STARE: loading -->
+    <div class="profile-state" *ngIf="loading">
+      <div class="spinner"></div>
+      <p>Se încarcă profilul tău...</p>
+    </div>
+
+    <!-- STARE: eroare / nu e logat -->
+    <div class="profile-state profile-state--error" *ngIf="!loading && error">
+      <p>{{ error }}</p>
+      <button class="btn btn--outline" (click)="goToLogin()">Mergi la login</button>
+    </div>
+
+    <!-- PROFIL -->
+    <div class="profile-card" *ngIf="!loading && !error && profile">
+      <div class="profile-header">
+        <div class="avatar">
+          <span>
+            {{ profile.firstName[0] }}{{ profile.lastName[0] }}
+          </span>
+        </div>
+
+        <div class="identity">
+          <h1 class="name">
+            {{ profile.firstName }} {{ profile.lastName }}
+          </h1>
+          <p class="email">{{ profile.email }}</p>
+
+          <span class="role" [class.role--admin]="profile.role === 'Admin'">
+            {{ profile.role }}
+          </span>
+        </div>
+      </div>
+
+      <div class="profile-meta">
+        <div class="meta-item">
+          <span class="meta-label">Rol</span>
+          <span class="meta-value">{{ profile.role }}</span>
+        </div>
+
+        <div class="meta-item">
+          <span class="meta-label">Cont creat</span>
+          <span class="meta-value">
+            {{ profile.createdAt | date: 'mediumDate' }}
+          </span>
+        </div>
+
+        <div class="meta-item">
+          <span class="meta-label">Nr. tururi logate</span>
+          <span class="meta-value">
+            {{ profile.lapCount ?? 0 }}
+          </span>
+        </div>
+      </div>
+
+      <div class="profile-actions">
+        <button class="btn btn--red" (click)="logout()">
+          Logout
+        </button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<app-footer></app-footer>
