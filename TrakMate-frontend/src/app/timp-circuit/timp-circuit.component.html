@@ -14,14 +14,20 @@
       <option value="date">Sortează: Data (cel mai recent)</option>
     </select>
 
-    <button class="btn" (click)="showForm = !showForm">{{ showForm ? 'Anulează' : 'Adaugă timp' }}</button>
+    <button class="btn" *ngIf="isLoggedIn()" (click)="showForm = !showForm">
+      {{ showForm ? 'Anulează' : 'Adaugă timp' }}
+    </button>
   </div>
 
-  <form class="add-time" *ngIf="showForm" (ngSubmit)="submitNewTime()">
+  <form class="add-time" *ngIf="showForm && isLoggedIn()" (ngSubmit)="submitNewTime()">
     <div class="row">
-      <input type="text" placeholder="Prenume (ex. Lando)" [(ngModel)]="form.firstName" name="firstName" required />
-      <input type="text" placeholder="Nume (ex. Norris)" [(ngModel)]="form.lastName" name="lastName" required />
-      <input type="text" placeholder="Timp (MM:SS.mmm sau ms)" [(ngModel)]="form.lapTime" name="lapTime" required />
+      <input 
+        type="text" 
+        placeholder="Timp (MM:SS.mmm sau ms)" 
+        [(ngModel)]="form.lapTime" 
+        name="lapTime" 
+        required 
+      />
       <button class="btn" type="submit">Salvează</button>
     </div>
     <p class="muted">Exemple: <code>01:23.250</code> sau <code>83250</code> (ms)</p>
@@ -47,6 +53,7 @@
           <th>Pilot</th>
           <th>Timp tur</th>
           <th>Data</th>
+          <th *ngIf="isLoggedIn()">Acțiuni</th>
         </tr>
       </thead>
       <tbody>
@@ -55,6 +62,16 @@
           <td>{{ time.pilot.firstName }} {{ time.pilot.lastName }}</td>
           <td><span class="lap-time" [class.best-lap]="i === 0">{{ formatLapTime(time.lapTimeMs) }}</span></td>
           <td>{{ time.createdAt | date: 'mediumDate' }}</td>
+          <td *ngIf="isLoggedIn()">
+            <!-- MODIFICAT: Buton șterge pentru Admin sau pentru timpurile tale -->
+            <button 
+              class="btn btn-delete" 
+              *ngIf="canDeleteTime(time)" 
+              (click)="deleteTime(time.id)"
+            >
+              🗑️ Șterge
+            </button>
+          </td>
         </tr>
       </tbody>
     </table>

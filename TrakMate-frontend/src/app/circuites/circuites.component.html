@@ -28,8 +28,27 @@
       <button class="btn ghost" (click)="clearFilters()" [disabled]="!q && !country">
         Reset filtre
       </button>
+
+      <!-- Buton Adaugă circuit (doar Admin) -->
+      <button class="btn" *ngIf="isAdminUser && !showForm" (click)="showForm = true">
+        + Adaugă circuit
+      </button>
     </div>
   </header>
+
+  <!-- Formular adăugare/editare circuit (doar Admin) -->
+  <form class="add-time" *ngIf="showForm && isAdminUser" (ngSubmit)="submitNewCircuit()">
+    <div class="row">
+      <input type="text" placeholder="Nume circuit (ex. Monaco)" [(ngModel)]="form.name" name="name" required />
+      <input type="number" placeholder="Km (ex. 3.337)" [(ngModel)]="form.km" name="km" step="0.001" required />
+      <input type="text" placeholder="Țară (ex. Monaco)" [(ngModel)]="form.country" name="country" required />
+      <button class="btn" type="submit">
+        {{ editingCircuitId !== null ? 'Actualizează' : 'Salvează' }}
+      </button>
+      <button class="btn ghost" type="button" (click)="cancelEdit()">Anulează</button>
+    </div>
+    <p class="muted" *ngIf="editingCircuitId !== null">Editezi circuitul</p>
+  </form>
 
   <div class="chips" *ngIf="countries.length">
     <button
@@ -72,7 +91,25 @@
       </div>
 
       <div class="card__actions">
-        <button class="btn small" (click)="circuiteDetails(c.id, c.name)">Detalii</button> 
+        <button class="btn small" (click)="circuiteDetails(c.id, c.name)">Detalii</button>
+        
+        <!-- Buton Edit (doar Admin) -->
+        <button 
+          class="btn btn-edit small" 
+          *ngIf="isAdminUser" 
+          (click)="startEdit(c)"
+        >
+          ✏️ Edit
+        </button>
+
+        <!-- Buton Șterge (doar Admin) -->
+        <button 
+          class="btn btn-delete small" 
+          *ngIf="isAdminUser" 
+          (click)="deleteCircuit(c.id, c.name)"
+        >
+          🗑️ Șterge
+        </button>
       </div>
     </article>
   </div>

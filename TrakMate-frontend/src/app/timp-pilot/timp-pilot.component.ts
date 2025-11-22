@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 
 import { TimpPilotService } from '../services/timp-pilot.service';
+import { AuthService } from '../services/auth.service';
 import { TimeModel } from '../shared/timeModel';
 
 import { NavBarComponent } from '../nav-bar/nav-bar.component';
@@ -30,13 +31,22 @@ export class TimpPilotComponent implements OnInit {
   showForm = false;
   form = { circuitName: '', country: '', lapTime: '' };
 
+  currentUserId: number | null = null; // pentru verificare
+  isAdminUser: boolean = false; // NOU: flag pentru Admin
+
   constructor(
     private route: ActivatedRoute,
     public router: Router,
-    private timpPilotService: TimpPilotService
+    private timpPilotService: TimpPilotService,
+    private authService: AuthService
   ) {}
 
   ngOnInit(): void {
+    // Verifică dacă e logat și ia userId
+    const user = this.authService.getCurrentUser();
+    this.currentUserId = user?.id ?? null;
+    this.isAdminUser = this.authService.isAdmin(); // NOU
+
     this.route.paramMap.subscribe((params) => {
       const idString = params.get('pilotId');
       this.pilotId = idString ? Number(idString) : null;
@@ -95,6 +105,42 @@ export class TimpPilotComponent implements OnInit {
           alert(err?.error?.message || 'Nu s-a putut adăuga timpul.');
         },
       });
+  }
+
+  // Șterge timp
+  deleteTime(timeId: number): void {
+    if (!this.pilotId) return;
+    if (!confirm('Sigur vrei să ștergi acest timp?')) return;
+
+    this.timpPilotService.deletePilotTime(this.pilotId, timeId).subscribe({
+      next: () => {
+        this.loadPilotTimes(this.pilotId!);
+      },
+      error: (err) => {
+        console.error('Eroare delete time', err);
+        alert(err?.error?.error || 'Nu s-a putut șterge timpul.');
+      }
+    });
+  }
+
+  // Verifică dacă timpul aparține userului logat
+  isMyTime(time: TimeModel): boolean {
+    return this.currentUserId !== null && time.pilot.id === this.currentUserId;
+  }
+
+  // Verifică dacă userul e logat
+  isLoggedIn(): boolean {
+    return this.authService.isLoggedIn();
+  }
+
+  // MODIFICAT: Admin poate edita orice pagină, Pilot doar a lui
+  canEditPage(): boolean {
+    return this.isAdminUser || (this.currentUserId !== null && this.currentUserId === this.pilotId);
+  }
+
+  // NOU: Admin poate șterge orice timp, Pilot doar al lui
+  canDeleteTime(time: TimeModel): boolean {
+    return this.isAdminUser || this.isMyTime(time);
   }
 
   /** Sortează local lista după cel mai rapid timp sau cea mai recentă dată */

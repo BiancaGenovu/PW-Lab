@@ -73,6 +73,12 @@ export class AuthService {
     return !!this.getToken();
   }
 
+  // NOU: verifică dacă userul e Admin
+  isAdmin(): boolean {
+    const user = this.getCurrentUser();
+    return user?.role === 'Admin';
+  }
+
   logout(): void {
     this.clearToken();
     this.clearCurrentUser();

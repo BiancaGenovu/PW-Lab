@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { TimpCircuitService } from '../services/timp-circuit.service';
+import { AuthService } from '../services/auth.service';
 import { TimeModel } from '../shared/timeModel';
 import { NavBarComponent } from '../nav-bar/nav-bar.component';
 import { FooterComponent } from '../footer/footer.component';
@@ -23,15 +24,23 @@ export class TimpCircuitComponent implements OnInit {
   sortBy: 'time' | 'date' = 'time';
 
   showForm = false;
-  form = { firstName: '', lastName: '', lapTime: '' };
+  form = { lapTime: '' };
+
+  currentUserId: number | null = null;
+  isAdminUser: boolean = false; // NOU: flag pentru Admin
 
   constructor(
     private route: ActivatedRoute,
     public router: Router,
-    private svc: TimpCircuitService
+    private svc: TimpCircuitService,
+    private authService: AuthService
   ) {}
 
   ngOnInit(): void {
+    const user = this.authService.getCurrentUser();
+    this.currentUserId = user?.id ?? null;
+    this.isAdminUser = this.authService.isAdmin(); // NOU
+
     this.route.paramMap.subscribe(params => {
       const idStr = params.get('circuitId');
       this.circuitId = idStr ? Number(idStr) : null;
@@ -64,21 +73,48 @@ export class TimpCircuitComponent implements OnInit {
 
   submitNewTime(): void {
     if (!this.circuitId) return;
-    const { firstName, lastName, lapTime } = this.form;
-    if (!firstName || !lastName || !lapTime) return;
+    const { lapTime } = this.form;
+    if (!lapTime) return;
 
-    this.svc.addCircuitTime(this.circuitId, { firstName, lastName, lapTime }).subscribe({
+    this.svc.addCircuitTime(this.circuitId, { lapTime }).subscribe({
       next: _created => {
-        // IMPORTANT: reîncărcăm lista de pe server pentru consistență
-        this.form = { firstName: '', lastName: '', lapTime: '' };
+        this.form = { lapTime: '' };
         this.showForm = false;
         this.fetchTimes(this.circuitId!);
       },
       error: err => {
         console.error('Eroare add time', err);
-        alert(err?.error?.detail || 'Nu s-a putut adăuga timpul.');
+        alert(err?.error?.error || err?.error?.detail || 'Nu s-a putut adăuga timpul.');
       }
     });
+  }
+
+  deleteTime(timeId: number): void {
+    if (!this.circuitId) return;
+    if (!confirm('Sigur vrei să ștergi acest timp?')) return;
+
+    this.svc.deleteCircuitTime(this.circuitId, timeId).subscribe({
+      next: () => {
+        this.fetchTimes(this.circuitId!);
+      },
+      error: err => {
+        console.error('Eroare delete time', err);
+        alert(err?.error?.error || 'Nu s-a putut șterge timpul.');
+      }
+    });
+  }
+
+  isMyTime(time: TimeModel): boolean {
+    return this.currentUserId !== null && time.pilot.id === this.currentUserId;
+  }
+
+  isLoggedIn(): boolean {
+    return this.authService.isLoggedIn();
+  }
+
+  // NOU: Admin poate șterge orice timp, Pilot doar al lui
+  canDeleteTime(time: TimeModel): boolean {
+    return this.isAdminUser || this.isMyTime(time);
   }
 
   applySort(): void {
@@ -89,7 +125,7 @@ export class TimpCircuitComponent implements OnInit {
       } else {
         const ad = new Date(a.createdAt).getTime();
         const bd = new Date(b.createdAt).getTime();
-        return bd - ad; // recent primele
+        return bd - ad;
       }
     });
   }

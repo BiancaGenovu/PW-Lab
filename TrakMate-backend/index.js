@@ -13,6 +13,9 @@ const authRouter = require('./modules/auth/auth.routes.js');
 // IMPORT NOU: routerul de profil
 const profileRouter = require('./modules/profile/profile.routes.js');
 
+// IMPORT: middleware de autentificare
+const { authRequired } = require('./modules/auth/auth.middleware.js');
+
 const app = express();
 const prisma = new PrismaClient();
 
@@ -62,6 +65,47 @@ app.post('/api/pilot', async (req, res) => {
   }
 });
 
+// DELETE /api/pilot/:pilotId -> șterge pilot (DOAR ADMIN)
+app.delete('/api/pilot/:pilotId', authRequired, async (req, res) => {
+  try {
+    const pilotId = Number(req.params.pilotId);
+    const isAdmin = req.user.role === 'Admin';
+
+    // Verifică că userul e Admin
+    if (!isAdmin) {
+      return res.status(403).json({ error: 'Only admins can delete pilots' });
+    }
+
+    if (!pilotId) {
+      return res.status(400).json({ error: 'Invalid pilotId' });
+    }
+
+    // Verifică că pilotul există
+    const pilot = await prisma.appUser.findUnique({
+      where: { id: pilotId }
+    });
+
+    if (!pilot) {
+      return res.status(404).json({ error: 'Pilot not found' });
+    }
+
+    // Nu permite ștergerea propriului cont de admin
+    if (req.user.id === pilotId) {
+      return res.status(400).json({ error: 'You cannot delete your own account' });
+    }
+
+    // Șterge pilotul (Prisma va șterge automat timpiile datorită onDelete: Cascade)
+    await prisma.appUser.delete({
+      where: { id: pilotId }
+    });
+
+    res.status(200).json({ message: 'Pilot deleted successfully' });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'DB error', detail: String(e.message || e) });
+  }
+});
+
 // ===== CIRCUITE
 
 // GET /api/circuites -> lista circuitelor active
@@ -78,17 +122,107 @@ app.get('/api/circuites', async (_req, res) => {
   }
 });
 
-// POST /api/circuites -> adaugă circuit
-app.post('/api/circuites', async (req, res) => {
+// POST /api/circuites -> adaugă circuit (DOAR ADMIN)
+app.post('/api/circuites', authRequired, async (req, res) => {
   try {
     const { name, km, country } = req.body;
+    const isAdmin = req.user.role === 'Admin';
+
+    // Verifică că userul e Admin
+    if (!isAdmin) {
+      return res.status(403).json({ error: 'Only admins can add circuits' });
+    }
+
     if (!name || km == null || !country) {
       return res.status(400).json({ error: 'name, km, country required' });
     }
+
     const created = await prisma.circuit.create({
       data: { name, km: Number(km), country }
     });
     res.status(201).json(created);
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'DB error', detail: String(e.message || e) });
+  }
+});
+
+// PUT /api/circuites/:circuitId -> editează circuit (DOAR ADMIN)
+app.put('/api/circuites/:circuitId', authRequired, async (req, res) => {
+  try {
+    const circuitId = Number(req.params.circuitId);
+    const { name, km, country } = req.body;
+    const isAdmin = req.user.role === 'Admin';
+
+    // Verifică că userul e Admin
+    if (!isAdmin) {
+      return res.status(403).json({ error: 'Only admins can edit circuits' });
+    }
+
+    if (!circuitId) {
+      return res.status(400).json({ error: 'Invalid circuitId' });
+    }
+
+    if (!name || km == null || !country) {
+      return res.status(400).json({ error: 'name, km, country required' });
+    }
+
+    // Verifică că circuitul există
+    const circuit = await prisma.circuit.findUnique({
+      where: { id: circuitId }
+    });
+
+    if (!circuit) {
+      return res.status(404).json({ error: 'Circuit not found' });
+    }
+
+    // Actualizează circuitul
+    const updated = await prisma.circuit.update({
+      where: { id: circuitId },
+      data: { 
+        name, 
+        km: Number(km), 
+        country 
+      }
+    });
+
+    res.status(200).json(updated);
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'DB error', detail: String(e.message || e) });
+  }
+});
+
+// DELETE /api/circuites/:circuitId -> șterge circuit (DOAR ADMIN)
+app.delete('/api/circuites/:circuitId', authRequired, async (req, res) => {
+  try {
+    const circuitId = Number(req.params.circuitId);
+    const isAdmin = req.user.role === 'Admin';
+
+    // Verifică că userul e Admin
+    if (!isAdmin) {
+      return res.status(403).json({ error: 'Only admins can delete circuits' });
+    }
+
+    if (!circuitId) {
+      return res.status(400).json({ error: 'Invalid circuitId' });
+    }
+
+    // Verifică că circuitul există
+    const circuit = await prisma.circuit.findUnique({
+      where: { id: circuitId }
+    });
+
+    if (!circuit) {
+      return res.status(404).json({ error: 'Circuit not found' });
+    }
+
+    // Șterge circuitul (Prisma va șterge automat timpii datorită onDelete: Cascade)
+    await prisma.circuit.delete({
+      where: { id: circuitId }
+    });
+
+    res.status(200).json({ message: 'Circuit deleted successfully' });
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: 'DB error', detail: String(e.message || e) });
@@ -112,7 +246,7 @@ app.get('/api/timePilot/:pilotId', async (req, res) => {
   }
 });
 
-// util: parsează "MM:SS.mmm" sau milisecunde numerice
+// util: parsează "MM:SS.mmm" sau miliseconde numerice
 function parseLapToMs(input) {
   if (typeof input === 'number') return input;
   const s = String(input).trim();
@@ -152,32 +286,33 @@ app.get('/api/circuites/:circuitId/times', async (req, res) => {
   }
 });
 
-// POST /api/circuites/:circuitId/times -> adaugă timp după numele pilotului
-app.post('/api/circuites/:circuitId/times', async (req, res) => {
+// POST /api/circuites/:circuitId/times -> adaugă timp pentru userul logat SAU admin
+app.post('/api/circuites/:circuitId/times', authRequired, async (req, res) => {
   try {
     const circuitId = Number(req.params.circuitId);
-    const { firstName, lastName, lapTime } = req.body;
+    const { lapTime, pilotId: bodyPilotId } = req.body; // Admin poate trimite pilotId
+    const loggedUserId = req.user.id;
+    const isAdmin = req.user.role === 'Admin';
 
     if (!circuitId) return res.status(400).json({ error: 'Invalid circuitId' });
-    if (!firstName || !lastName || lapTime == null) {
-      return res.status(400).json({ error: 'firstName, lastName, lapTime required' });
+    if (lapTime == null) {
+      return res.status(400).json({ error: 'lapTime required' });
     }
 
-    const pilot = await prisma.appUser.findFirst({
-      where: {
-        firstName: { equals: String(firstName).trim(), mode: 'insensitive' },
-        lastName:  { equals: String(lastName).trim(),  mode: 'insensitive' },
-        role: 'Pilot',
-        isActive: true
-      },
-      select: { id: true, firstName: true, lastName: true }
-    });
-    if (!pilot) return res.status(404).json({ error: 'Pilot not found' });
+    // Determină pilotId: Admin poate specifica, Pilot adaugă pentru el
+    let pilotId;
+    if (isAdmin && bodyPilotId) {
+      pilotId = Number(bodyPilotId); // Admin specifică pilotul
+    } else if (req.user.role === 'Pilot') {
+      pilotId = loggedUserId; // Pilot adaugă pentru el
+    } else {
+      return res.status(403).json({ error: 'Only pilots and admins can add times' });
+    }
 
     const lapTimeMs = parseLapToMs(lapTime);
 
     const created = await prisma.timeRecord.create({
-      data: { pilotId: pilot.id, circuitId, lapTimeMs },
+      data: { pilotId, circuitId, lapTimeMs },
       select: {
         id: true,
         lapTimeMs: true,
@@ -194,18 +329,68 @@ app.post('/api/circuites/:circuitId/times', async (req, res) => {
   }
 });
 
-// POST /api/timePilot/:pilotId/times -> adaugă timp pentru un pilot (circuit după nume+țară)
-app.post('/api/timePilot/:pilotId/times', async (req, res) => {
+// DELETE /api/circuites/:circuitId/times/:timeId -> șterge timpul propriu SAU admin șterge orice
+app.delete('/api/circuites/:circuitId/times/:timeId', authRequired, async (req, res) => {
+  try {
+    const circuitId = Number(req.params.circuitId);
+    const timeId = Number(req.params.timeId);
+    const loggedUserId = req.user.id;
+    const isAdmin = req.user.role === 'Admin';
+
+    if (!circuitId || !timeId) {
+      return res.status(400).json({ error: 'Invalid circuitId or timeId' });
+    }
+
+    // Verifică că timpul există
+    const existingTime = await prisma.timeRecord.findUnique({
+      where: { id: timeId },
+      select: { id: true, pilotId: true, circuitId: true }
+    });
+
+    if (!existingTime) {
+      return res.status(404).json({ error: 'Time record not found' });
+    }
+
+    if (existingTime.circuitId !== circuitId) {
+      return res.status(400).json({ error: 'Time does not belong to this circuit' });
+    }
+
+    // Admin poate șterge orice, Pilot doar timpul lui
+    if (!isAdmin && existingTime.pilotId !== loggedUserId) {
+      return res.status(403).json({ error: 'You can only delete your own times' });
+    }
+
+    // Șterge timpul
+    await prisma.timeRecord.delete({
+      where: { id: timeId }
+    });
+
+    res.status(200).json({ message: 'Time deleted successfully' });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'DB error', detail: String(e.message || e) });
+  }
+});
+
+// POST /api/timePilot/:pilotId/times -> adaugă timp pentru pilotul logat SAU admin pentru orice pilot
+app.post('/api/timePilot/:pilotId/times', authRequired, async (req, res) => {
   try {
     const pilotId = Number(req.params.pilotId);
     const { circuitName, country, lapTime } = req.body;
+    const loggedUserId = req.user.id;
+    const isAdmin = req.user.role === 'Admin';
 
     if (!pilotId) return res.status(400).json({ message: 'Invalid pilotId' });
+    
+    // VERIFICARE: Pilot doar pentru el, Admin pentru oricine
+    if (!isAdmin && loggedUserId !== pilotId) {
+      return res.status(403).json({ message: 'You can only add times for yourself' });
+    }
+
     if (!circuitName || !country || lapTime == null) {
       return res.status(400).json({ message: 'circuitName, country, lapTime required' });
     }
 
-    // caută circuitul după nume + țară (case-insensitive, doar active)
     const circuit = await prisma.circuit.findFirst({
       where: {
         name:    { equals: String(circuitName).trim(), mode: 'insensitive' },
@@ -233,6 +418,47 @@ app.post('/api/timePilot/:pilotId/times', async (req, res) => {
   } catch (e) {
     console.error(e);
     res.status(500).json({ message: 'DB error', detail: String(e.message || e) });
+  }
+});
+
+// DELETE /api/timePilot/:pilotId/times/:timeId -> șterge timpul propriu SAU admin șterge orice
+app.delete('/api/timePilot/:pilotId/times/:timeId', authRequired, async (req, res) => {
+  try {
+    const pilotId = Number(req.params.pilotId);
+    const timeId = Number(req.params.timeId);
+    const loggedUserId = req.user.id;
+    const isAdmin = req.user.role === 'Admin';
+
+    if (!pilotId || !timeId) {
+      return res.status(400).json({ error: 'Invalid pilotId or timeId' });
+    }
+
+    // Verifică că timpul există
+    const existingTime = await prisma.timeRecord.findUnique({
+      where: { id: timeId },
+      select: { id: true, pilotId: true }
+    });
+
+    if (!existingTime) {
+      return res.status(404).json({ error: 'Time record not found' });
+    }
+
+    // Admin poate șterge orice, Pilot doar timpul lui din pagina lui
+    if (!isAdmin) {
+      if (loggedUserId !== pilotId || existingTime.pilotId !== pilotId) {
+        return res.status(403).json({ error: 'You can only delete your own times' });
+      }
+    }
+
+    // Șterge timpul
+    await prisma.timeRecord.delete({
+      where: { id: timeId }
+    });
+
+    res.status(200).json({ message: 'Time deleted successfully' });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'DB error', detail: String(e.message || e) });
   }
 });
 

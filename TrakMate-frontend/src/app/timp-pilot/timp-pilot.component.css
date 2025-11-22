@@ -280,6 +280,20 @@ html, body, .page {
     animation: pulse-glow 2s ease-in-out infinite;
 }
 
+.btn-delete {
+  background-color: #dc3545;
+  color: white;
+  padding: 0.4rem 0.8rem;
+  font-size: 0.875rem;
+  border: none;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.btn-delete:hover {
+  background-color: #c82333;
+}
+
 @keyframes pulse-glow {
     0%, 100% {
         box-shadow: 0 0 20px rgba(225,6,0,0.3);

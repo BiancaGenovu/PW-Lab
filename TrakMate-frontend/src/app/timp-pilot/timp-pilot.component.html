@@ -16,14 +16,14 @@
       <option value="date">Sortează: Data (cel mai recent)</option>
     </select>
 
-    <!-- ADĂUGAT: toggle formular -->
-    <button class="btn" (click)="showForm = !showForm">
+    <!-- MODIFICAT: Afișează butonul dacă e pagina TA SAU dacă ești Admin -->
+    <button class="btn" *ngIf="canEditPage()" (click)="showForm = !showForm">
       {{ showForm ? 'Anulează' : 'Adaugă timp' }}
     </button>
   </div>
 
-  <!-- ADĂUGAT: formular creare timp pentru pilot -->
-  <form class="add-time" *ngIf="showForm" (ngSubmit)="submitNewTime()">
+  <!-- MODIFICAT: Formular apare dacă poți edita pagina -->
+  <form class="add-time" *ngIf="showForm && canEditPage()" (ngSubmit)="submitNewTime()">
     <div class="row">
       <input type="text" placeholder="Circuit (ex. Silverstone)" [(ngModel)]="form.circuitName" name="circuitName" required />
       <input type="text" placeholder="Țară (ex. Marea Britanie)" [(ngModel)]="form.country" name="country" required />
@@ -33,7 +33,6 @@
     <p class="muted">Exemple: <code>01:23.250</code> sau <code>83250</code> (ms)</p>
   </form>
 
-  <!-- loading / empty / table — neschimbate -->
   <div class="empty" *ngIf="loading">
     <p>Se încarcă timpii pilotului {{ pilotName }}...</p>
     <div class="skeleton-table"></div>
@@ -55,6 +54,7 @@
           <th>Timp Tur</th>
           <th>Țară</th>
           <th>Data</th>
+          <th *ngIf="canEditPage()">Acțiuni</th> <!-- MODIFICAT: coloană pentru acțiuni -->
         </tr>
       </thead>
       <tbody>
@@ -64,6 +64,16 @@
           <td><span class="lap-time" [class.best-lap]="i === 0">{{ formatLapTime(time.lapTimeMs) }}</span></td>
           <td>{{ time.circuit.country }}</td>
           <td>{{ time.createdAt | date: 'mediumDate' }}</td>
+          <td *ngIf="canEditPage()">
+            <!-- MODIFICAT: Buton șterge pentru Admin sau pentru timpurile tale -->
+            <button 
+              class="btn btn-delete" 
+              *ngIf="canDeleteTime(time)"
+              (click)="deleteTime(time.id)"
+            >
+              🗑️ Șterge
+            </button>
+          </td>
         </tr>
       </tbody>
     </table>
