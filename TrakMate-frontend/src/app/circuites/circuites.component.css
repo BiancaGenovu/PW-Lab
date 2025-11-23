@@ -423,6 +423,130 @@ html, body {
     }
 }
 
+/* Styling pentru imaginea circuitului */
+.card__image {
+  position: relative;
+  width: 100%;
+  height: 200px;
+  overflow: hidden;
+  background: #1a1a1a;
+  border-radius: 8px 8px 0 0;
+  margin-bottom: 1rem;
+}
+
+.card__image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+}
+
+/* Overlay pentru butonul de upload */
+.image-upload {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 100%);
+  padding: 1rem;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.card__image:hover .image-upload {
+  opacity: 1;
+}
+
+.btn-upload {
+  width: 100%;
+  background: rgba(220, 38, 38, 0.9) !important;
+  color: white !important;
+  border: none;
+  cursor: pointer;
+  font-size: 0.875rem;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.btn-upload:hover {
+  background: rgba(185, 28, 28, 1) !important;
+}
+
+/* Ajustări pentru card */
+.card {
+  display: flex;
+  flex-direction: column;
+  background: #1a1a1a;
+  border-radius: 8px;
+  overflow: hidden;
+  transition: transform 0.2s, box-shadow 0.2s;
+  height: 100%;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+/* Ajustări pentru conținutul cardului */
+.card__head,
+.card__meta,
+.card__actions {
+  padding: 0 1rem;
+}
+
+.card__head {
+  padding-top: 0.5rem;
+}
+
+.card__actions {
+  padding-bottom: 1rem;
+  margin-top: auto;
+}
+
+/* Butoane în linie */
+.card__actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.btn-edit {
+  background: #f59e0b !important;
+}
+
+.btn-edit:hover {
+  background: #d97706 !important;
+}
+
+.btn-delete {
+  background: #ef4444 !important;
+}
+
+.btn-delete:hover {
+  background: #dc2626 !important;
+}
+
+/* Grid responsive */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
+
+@media (max-width: 768px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .card__image {
+    height: 180px;
+  }
+}
+
 @media (max-width: 1024px) {
     .page__header h1 {
         font-size: 2.5rem;

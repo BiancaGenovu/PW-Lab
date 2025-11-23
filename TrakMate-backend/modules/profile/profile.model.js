@@ -21,6 +21,7 @@ async function getProfileById(userId) {
       firstName: true,
       lastName: true,
       role: true,
+      profileImage: true,
       createdAt: true,
       isActive: true,
     },

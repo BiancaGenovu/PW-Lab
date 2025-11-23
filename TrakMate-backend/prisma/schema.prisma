@@ -8,29 +8,31 @@ datasource db {
 }
 
 model AppUser {
-  id        Int          @id(map: "User_pkey") @default(autoincrement())
-  email     String       @unique(map: "User_email_key")
-  password  String
-  role      String       @default("Pilot")
-  firstName String       @map("firstName")
-  lastName  String       @map("lastName")
-  isActive  Boolean      @default(true)
-  createdAt DateTime     @default(now()) @db.Timestamp(6)
-  updatedAt DateTime     @default(now()) @updatedAt @db.Timestamp(6)
-  times     TimeRecord[]
+  id           Int          @id(map: "User_pkey") @default(autoincrement())
+  email        String       @unique(map: "User_email_key")
+  password     String
+  role         String       @default("Pilot")
+  firstName    String       @map("firstName")
+  lastName     String       @map("lastName")
+  isActive     Boolean      @default(true)
+  createdAt    DateTime     @default(now()) @db.Timestamp(6)
+  updatedAt    DateTime     @default(now()) @updatedAt @db.Timestamp(6)
+  profileImage String?      @map("profileImage")
+  times        TimeRecord[]
 
   @@map("app_user")
 }
 
 model Circuit {
-  id        Int          @id @default(autoincrement())
-  name      String
-  km        Float
-  country   String
-  isActive  Boolean      @default(true)
-  createdAt DateTime     @default(now())
-  updatedAt DateTime     @updatedAt
-  times     TimeRecord[]
+  id           Int          @id @default(autoincrement())
+  name         String
+  km           Float
+  country      String
+  isActive     Boolean      @default(true)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  circuitImage String?      @map("circuitImage")
+  times        TimeRecord[]
 
   @@unique([name, country])
   @@index([country])

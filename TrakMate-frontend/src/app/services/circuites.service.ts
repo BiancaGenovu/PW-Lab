@@ -47,4 +47,16 @@ export class CircuitesService {
       { headers: this.getHeaders() }
     );
   }
+
+  // NOU: Upload imagine circuit
+  uploadCircuitImage(circuitId: number, imageFile: File): Observable<any> {
+    const formData = new FormData();
+    formData.append('image', imageFile);
+
+    return this.http.put(
+      `${this.baseApiUrl}/${circuitId}/upload-image`,
+      formData,
+      { headers: this.getHeaders() }
+    );
+  }
 }

@@ -9,8 +9,7 @@
       Construim cel mai prietenos loc unde piloții și fanii F1 își pot urmări, compara și îmbunătăți timpii pe orice circuit.
     </p>
     <div class="tm-hero__ctas">
-      <a class="btn btn--ghost" routerLink="/circuite">Vezi circuite</a>
-      <a class="btn" routerLink="/register">Începe acum</a>
+      <a class="btn btn--ghost" (click)="changeToCircuites()">Vezi circuite</a>
     </div>
   </div>
 </section>
@@ -76,8 +75,8 @@
       <h3>Alătură-te comunității Track<span class="accent">Mate</span></h3>
       <p class="muted">Înregistrează timpi, urmărește progresul, urcă în clasament.</p>
       <div class="cta__actions">
-        <a class="btn" routerLink="/register">Creează cont</a>
-        <a class="btn btn--ghost" routerLink="/login">Am deja cont</a>
+        <a class="btn" (click)="changeToRegister()">Creează cont</a>
+        <a class="btn btn--ghost" (click)="changeToLogin()">Am deja cont</a>
       </div>
     </div>
   </div>

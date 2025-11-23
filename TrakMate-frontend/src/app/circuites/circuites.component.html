@@ -78,6 +78,26 @@
 
   <div class="grid" *ngIf="!loading && filtered.length">
     <article class="card" *ngFor="let c of filtered"> 
+      <!-- NOU: Imaginea circuitului -->
+      <div class="card__image">
+        <img [src]="getCircuitImageUrl(c)" [alt]="c.name" />
+        
+        <!-- Upload imagine (doar Admin) -->
+        <div class="image-upload" *ngIf="isAdminUser">
+          <input 
+            type="file" 
+            accept="image/png,image/jpeg,image/jpg,image/gif,image/webp"
+            (change)="onCircuitFileSelected($event, c.id)" 
+            [id]="'file-' + c.id"
+            style="display: none;"
+          />
+          <label [for]="'file-' + c.id" class="btn btn-upload small">
+            {{ uploading && uploadingCircuitId === c.id ? '⏳' : '📷' }} 
+            {{ uploading && uploadingCircuitId === c.id ? 'Se încarcă...' : 'Schimbă imagine' }}
+          </label>
+        </div>
+      </div>
+
       <div class="card__head">
         <h3 class="card__title">{{ c.name }}</h3>
         <span class="badge">{{ c.country }}</span>

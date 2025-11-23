@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../shared/environment';
 import { UserProfile } from '../shared/profileModel';
@@ -30,6 +30,20 @@ export class AuthService {
     return this.http.post<{ token: string; user: UserProfile }>(
       `${this.apiUrl}/register`,
       body
+    );
+  }
+
+  // NOU: Upload imagine profil
+  uploadProfileImage(userId: number, formData: FormData): Observable<any> {
+    const token = this.getToken();
+    const headers = new HttpHeaders({
+      'Authorization': token ? `Bearer ${token}` : ''
+    });
+
+    return this.http.put(
+      `${environment.backend_api}/api/pilot/${userId}/upload-image`,
+      formData,
+      { headers }
     );
   }
 
@@ -73,7 +87,7 @@ export class AuthService {
     return !!this.getToken();
   }
 
-  // NOU: verifică dacă userul e Admin
+  // verifică dacă userul e Admin
   isAdmin(): boolean {
     const user = this.getCurrentUser();
     return user?.role === 'Admin';

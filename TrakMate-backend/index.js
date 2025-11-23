@@ -2,6 +2,8 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const multer = require('multer');
+const path = require('path');
 const { PrismaClient } = require('@prisma/client');
 
 // Importă funcțiile de model necesare din module
@@ -23,6 +25,54 @@ const prisma = new PrismaClient();
 app.use(cors());
 app.use(express.json());
 
+// ===== Servire fișiere statice (imagini)
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// ===== Configurare Multer pentru upload imagini
+
+// Storage pentru poze de profil
+const profileStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'uploads/profiles/');
+  },
+  filename: (req, file, cb) => {
+    const uniqueName = `${Date.now()}-${Math.round(Math.random() * 1E9)}${path.extname(file.originalname)}`;
+    cb(null, uniqueName);
+  }
+});
+
+// Storage pentru poze de circuite
+const circuitStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'uploads/circuits/');
+  },
+  filename: (req, file, cb) => {
+    const uniqueName = `${Date.now()}-${Math.round(Math.random() * 1E9)}${path.extname(file.originalname)}`;
+    cb(null, uniqueName);
+  }
+});
+
+// Filtrare: doar imagini
+const imageFilter = (req, file, cb) => {
+  if (file.mimetype.startsWith('image/')) {
+    cb(null, true);
+  } else {
+    cb(new Error('Only image files are allowed!'), false);
+  }
+};
+
+const uploadProfile = multer({ 
+  storage: profileStorage, 
+  fileFilter: imageFilter,
+  limits: { fileSize: 5 * 1024 * 1024 } // Max 5MB
+});
+
+const uploadCircuit = multer({ 
+  storage: circuitStorage, 
+  fileFilter: imageFilter,
+  limits: { fileSize: 5 * 1024 * 1024 } // Max 5MB
+});
+
 // ===== healthcheck
 app.get('/health', (_req, res) => res.send('OK'));
 
@@ -39,7 +89,7 @@ app.get('/api/pilot', async (_req, res) => {
   try {
     const users = await prisma.appUser.findMany({
       orderBy: { id: 'asc' },
-      select: { id: true, email: true, firstName: true, lastName: true, role: true, createdAt: true }
+      select: { id: true, email: true, firstName: true, lastName: true, role: true, profileImage: true, createdAt: true }
     });
     res.json(users);
   } catch (e) {
@@ -62,6 +112,42 @@ app.post('/api/pilot', async (req, res) => {
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: 'DB error', detail: String(e.message || e) });
+  }
+});
+
+// PUT /api/pilot/:pilotId/upload-image -> upload imagine profil (Admin sau propriul profil)
+app.put('/api/pilot/:pilotId/upload-image', authRequired, uploadProfile.single('image'), async (req, res) => {
+  try {
+    const pilotId = Number(req.params.pilotId);
+    const loggedUserId = req.user.id;
+    const isAdmin = req.user.role === 'Admin';
+
+    if (!pilotId) {
+      return res.status(400).json({ error: 'Invalid pilotId' });
+    }
+
+    // Verificare: Admin poate edita oricine, Pilot doar pe el însuși
+    if (!isAdmin && loggedUserId !== pilotId) {
+      return res.status(403).json({ error: 'You can only upload your own profile image' });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({ error: 'No image file provided' });
+    }
+
+    // Construiește URL-ul imaginii
+    const imageUrl = `/uploads/profiles/${req.file.filename}`;
+
+    // Actualizează în baza de date
+    const updated = await prisma.appUser.update({
+      where: { id: pilotId },
+      data: { profileImage: imageUrl }
+    });
+
+    res.status(200).json({ message: 'Image uploaded successfully', profileImage: imageUrl });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Upload failed', detail: String(e.message || e) });
   }
 });
 
@@ -113,7 +199,8 @@ app.get('/api/circuites', async (_req, res) => {
   try {
     const circuites = await prisma.circuit.findMany({
       where: { isActive: true },
-      orderBy: { name: 'asc' }
+      orderBy: { name: 'asc' },
+      select: { id: true, name: true, km: true, country: true, circuitImage: true, createdAt: true }
     });
     res.json(circuites);
   } catch (e) {
@@ -190,6 +277,40 @@ app.put('/api/circuites/:circuitId', authRequired, async (req, res) => {
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: 'DB error', detail: String(e.message || e) });
+  }
+});
+
+// PUT /api/circuites/:circuitId/upload-image -> upload imagine circuit (DOAR ADMIN)
+app.put('/api/circuites/:circuitId/upload-image', authRequired, uploadCircuit.single('image'), async (req, res) => {
+  try {
+    const circuitId = Number(req.params.circuitId);
+    const isAdmin = req.user.role === 'Admin';
+
+    if (!isAdmin) {
+      return res.status(403).json({ error: 'Only admins can upload circuit images' });
+    }
+
+    if (!circuitId) {
+      return res.status(400).json({ error: 'Invalid circuitId' });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({ error: 'No image file provided' });
+    }
+
+    // Construiește URL-ul imaginii
+    const imageUrl = `/uploads/circuits/${req.file.filename}`;
+
+    // Actualizează în baza de date
+    const updated = await prisma.circuit.update({
+      where: { id: circuitId },
+      data: { circuitImage: imageUrl }
+    });
+
+    res.status(200).json({ message: 'Image uploaded successfully', circuitImage: imageUrl });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Upload failed', detail: String(e.message || e) });
   }
 });
 

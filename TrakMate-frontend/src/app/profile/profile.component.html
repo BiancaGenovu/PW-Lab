@@ -1,66 +1,83 @@
 <app-nav-bar></app-nav-bar>
-<section class="profile-page">
-  <div class="profile-container">
 
-    <!-- STARE: loading -->
-    <div class="profile-state" *ngIf="loading">
-      <div class="spinner"></div>
-      <p>Se încarcă profilul tău...</p>
+<section class="page">
+  <header class="page__header">
+    <h1>Profilul meu</h1>
+  </header>
+
+  <div class="empty" *ngIf="loading">
+    <p>Se încarcă profilul...</p>
+  </div>
+
+  <div class="empty" *ngIf="!loading && error">
+    <div class="empty__card">
+      <h3>Eroare</h3>
+      <p class="muted">{{ error }}</p>
+      <button class="btn" (click)="goToLogin()">Mergi la Login</button>
     </div>
+  </div>
 
-    <!-- STARE: eroare / nu e logat -->
-    <div class="profile-state profile-state--error" *ngIf="!loading && error">
-      <p>{{ error }}</p>
-      <button class="btn btn--outline" (click)="goToLogin()">Mergi la login</button>
-    </div>
-
-    <!-- PROFIL -->
-    <div class="profile-card" *ngIf="!loading && !error && profile">
-      <div class="profile-header">
-        <div class="avatar">
-          <span>
-            {{ profile.firstName[0] }}{{ profile.lastName[0] }}
-          </span>
-        </div>
-
-        <div class="identity">
-          <h1 class="name">
-            {{ profile.firstName }} {{ profile.lastName }}
-          </h1>
-          <p class="email">{{ profile.email }}</p>
-
-          <span class="role" [class.role--admin]="profile.role === 'Admin'">
-            {{ profile.role }}
-          </span>
-        </div>
-      </div>
-
-      <div class="profile-meta">
-        <div class="meta-item">
-          <span class="meta-label">Rol</span>
-          <span class="meta-value">{{ profile.role }}</span>
-        </div>
-
-        <div class="meta-item">
-          <span class="meta-label">Cont creat</span>
-          <span class="meta-value">
-            {{ profile.createdAt | date: 'mediumDate' }}
-          </span>
-        </div>
-
-        <div class="meta-item">
-          <span class="meta-label">Nr. tururi logate</span>
-          <span class="meta-value">
-            {{ profile.lapCount ?? 0 }}
-          </span>
-        </div>
-      </div>
-
-      <div class="profile-actions">
-        <button class="btn btn--red" (click)="logout()">
-          Logout
+  <div class="profile-container" *ngIf="!loading && profile">
+    <!-- Imagine profil -->
+    <div class="profile-image-section">
+      <img [src]="getProfileImageUrl()" alt="Profile Image" class="profile-image" />
+      
+      <!-- Upload imagine -->
+      <div class="upload-section">
+        <input 
+          type="file" 
+          accept="image/png,image/jpeg,image/jpg,image/gif,image/webp"
+          (change)="onFileSelected($event)" 
+          #fileInput
+          style="display: none;"
+        />
+        <button class="btn small" (click)="fileInput.click()" [disabled]="uploading">
+          {{ selectedFile ? 'Schimbă imaginea' : 'Alege imagine' }}
         </button>
+        
+        <button 
+          class="btn small" 
+          *ngIf="selectedFile" 
+          (click)="uploadImage()"
+          [disabled]="uploading"
+        >
+          {{ uploading ? 'Se încarcă...' : 'Salvează' }}
+        </button>
+        
+        <p class="muted" *ngIf="selectedFile">{{ selectedFile.name }}</p>
       </div>
+    </div>
+
+    <!-- Informații profil -->
+    <div class="profile-info">
+      <div class="info-row">
+        <span class="label">Nume:</span>
+        <span class="value">{{ profile.firstName }} {{ profile.lastName }}</span>
+      </div>
+
+      <div class="info-row">
+        <span class="label">Email:</span>
+        <span class="value">{{ profile.email }}</span>
+      </div>
+
+      <div class="info-row">
+        <span class="label">Rol:</span>
+        <span class="value">{{ profile.role }}</span>
+      </div>
+
+      <div class="info-row" *ngIf="profile.lapCount !== undefined">
+        <span class="label">Tururi înregistrate:</span>
+        <span class="value">{{ profile.lapCount }}</span>
+      </div>
+
+      <div class="info-row">
+        <span class="label">Cont creat:</span>
+        <span class="value">{{ profile.createdAt | date: 'mediumDate' }}</span>
+      </div>
+    </div>
+
+    <div class="profile-actions">
+      <button class="btn btn-logout" (click)="logout()">Logout</button>
     </div>
   </div>
 </section>

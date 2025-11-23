@@ -7,6 +7,7 @@ import { NavBarComponent } from '../nav-bar/nav-bar.component';
 import { FooterComponent } from '../footer/footer.component';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { environment } from '../shared/environment';
 
 @Component({
   selector: 'app-circuites',
@@ -30,8 +31,13 @@ export class CircuitesComponent implements OnInit {
   showForm = false;
   form = { name: '', km: 0, country: '' };
 
-  // NOU: Pentru editare
+  // Pentru editare
   editingCircuitId: number | null = null;
+
+  // NOU: Pentru upload imagine
+  selectedFile: File | null = null;
+  uploading = false;
+  uploadingCircuitId: number | null = null;
 
   constructor(
     private circuitesService: CircuitesService,
@@ -112,7 +118,7 @@ export class CircuitesComponent implements OnInit {
     });
   }
 
-  // Adaugă circuit (Admin)
+  // Adaugă/Editează circuit (Admin)
   submitNewCircuit(): void {
     const { name, km, country } = this.form;
     if (!name || !km || !country) {
@@ -150,7 +156,7 @@ export class CircuitesComponent implements OnInit {
     }
   }
 
-  // NOU: Începe editarea
+  // Începe editarea
   startEdit(circuit: circuitesModel): void {
     this.editingCircuitId = circuit.id;
     this.form = {
@@ -161,7 +167,7 @@ export class CircuitesComponent implements OnInit {
     this.showForm = true;
   }
 
-  // NOU: Anulează editarea
+  // Anulează editarea
   cancelEdit(): void {
     this.form = { name: '', km: 0, country: '' };
     this.showForm = false;
@@ -183,5 +189,56 @@ export class CircuitesComponent implements OnInit {
         alert(err?.error?.error || 'Nu s-a putut șterge circuitul.');
       }
     });
+  }
+
+  // NOU: Handler pentru selectare fișier
+  onCircuitFileSelected(event: any, circuitId: number): void {
+    const file = event.target.files[0];
+    if (file) {
+      // Verifică că e imagine
+      if (!file.type.startsWith('image/')) {
+        alert('Te rog selectează o imagine validă!');
+        return;
+      }
+      // Verifică dimensiune (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        alert('Imaginea e prea mare! Max 5MB.');
+        return;
+      }
+      this.selectedFile = file;
+      this.uploadingCircuitId = circuitId;
+      this.uploadCircuitImage(circuitId);
+    }
+  }
+
+  // NOU: Upload imagine circuit
+  uploadCircuitImage(circuitId: number): void {
+    if (!this.selectedFile) return;
+
+    this.uploading = true;
+    this.circuitesService.uploadCircuitImage(circuitId, this.selectedFile).subscribe({
+      next: (response) => {
+        console.log('Upload success:', response);
+        this.uploading = false;
+        this.selectedFile = null;
+        this.uploadingCircuitId = null;
+        this.loadCircuits();
+      },
+      error: (err) => {
+        console.error('Upload error:', err);
+        this.uploading = false;
+        this.selectedFile = null;
+        this.uploadingCircuitId = null;
+        alert(err?.error?.error || 'Nu s-a putut uploada imaginea.');
+      }
+    });
+  }
+
+  // NOU: Generează URL complet pentru imaginea circuitului
+  getCircuitImageUrl(circuit: circuitesModel): string {
+    if (circuit.circuitImage) {
+      return `${environment.backend_api}${circuit.circuitImage}`;
+    }
+    return 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="300" height="200"%3E%3Crect width="300" height="200" fill="%23ddd"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="16" fill="%23999"%3ENo Image%3C/text%3E%3C/svg%3E';
   }
 }

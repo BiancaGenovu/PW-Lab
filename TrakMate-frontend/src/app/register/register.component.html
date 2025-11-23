@@ -10,13 +10,45 @@
     <form
       class="auth-form"
       autocomplete="on"
-      enctype="multipart/form-data"
       (ngSubmit)="onSubmit()"
       #registerForm="ngForm"
     >
+      <!-- IMAGINE PROFIL - Mutată sus cu preview -->
+      <div class="profile-image-upload">
+        <div class="image-preview-container">
+          <img 
+            [src]="imagePreview || 'assets/default-avatar.png'" 
+            alt="Profile preview"
+            class="preview-image"
+            (error)="handleImageError($event)"
+          />
+          <button 
+            type="button" 
+            class="remove-image-btn" 
+            *ngIf="imagePreview"
+            (click)="removeImage()"
+            title="Șterge imagine"
+          >
+            ✕
+          </button>
+        </div>
+        
+        <label class="upload-btn">
+          <input
+            type="file"
+            name="avatar"
+            accept="image/png,image/jpeg,image/jpg,image/gif,image/webp"
+            (change)="onFileSelected($event)"
+            style="display: none;"
+          />
+          <span>{{ imagePreview ? '📷 Schimbă imaginea' : '📷 Adaugă imagine' }}</span>
+        </label>
+        <small class="field__hint">PNG/JPG, max 5MB (opțional)</small>
+      </div>
+
       <!-- EMAIL -->
       <label class="field">
-        <span class="field__label">Email</span>
+        <span class="field__label">Email *</span>
         <input
           class="field__input"
           type="email"
@@ -29,7 +61,7 @@
 
       <!-- PAROLĂ -->
       <label class="field">
-        <span class="field__label">Parolă</span>
+        <span class="field__label">Parolă *</span>
         <input
           class="field__input"
           type="password"
@@ -42,7 +74,7 @@
 
       <!-- PRENUME -->
       <label class="field">
-        <span class="field__label">Prenume</span>
+        <span class="field__label">Prenume *</span>
         <input
           class="field__input"
           type="text"
@@ -55,7 +87,7 @@
 
       <!-- NUME -->
       <label class="field">
-        <span class="field__label">Nume</span>
+        <span class="field__label">Nume *</span>
         <input
           class="field__input"
           type="text"
@@ -66,41 +98,7 @@
         />
       </label>
 
-      <!-- ȚARĂ (momentan doar în UI, nu o trimitem încă la backend) -->
-      <label class="field">
-        <span class="field__label">Țară</span>
-        <input
-          class="field__input"
-          type="text"
-          name="country"
-          placeholder="ex: România"
-        />
-      </label>
-
-      <!-- ECHIPĂ (momentan doar în UI) -->
-      <label class="field">
-        <span class="field__label">Echipă</span>
-        <input
-          class="field__input"
-          type="text"
-          name="team"
-          placeholder="ex: McLaren"
-        />
-      </label>
-
-      <!-- IMAGINE PROFIL (momentan nu o trimitem la backend) -->
-      <label class="field">
-        <span class="field__label">Imagine profil</span>
-        <input
-          class="field__input"
-          type="file"
-          name="avatar"
-          accept="image/*"
-        />
-        <small class="field__hint" style="opacity:.8">PNG/JPG, max ~5MB</small>
-      </label>
-
-      <!-- EROARE SIMPLĂ -->
+      <!-- EROARE -->
       <p class="auth-error" *ngIf="error">{{ error }}</p>
 
       <!-- ACTIONS -->
@@ -108,7 +106,7 @@
         <button type="submit" class="btn btn--white" [disabled]="loading">
           {{ loading ? 'Se creează contul...' : 'Creează cont' }}
         </button>
-        <button type="button" class="btn btn--white" (click)="changeToLogin()">
+        <button type="button" class="btn btn--ghost" (click)="changeToLogin()">
           Am deja cont
         </button>
       </div>
