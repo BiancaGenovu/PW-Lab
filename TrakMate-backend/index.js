@@ -25,6 +25,36 @@ const prisma = new PrismaClient();
 app.use(cors());
 app.use(express.json());
 
+// ===== HELPER FUNCTIONS pentru sectoare =====
+
+// Helper: calculează timpul total din sectoare
+function calculateTotalTime(sector1Ms, sector2Ms, sector3Ms) {
+  return sector1Ms + sector2Ms + sector3Ms;
+}
+
+// Helper: parsează timp în format MM:SS.mmm sau miliseconde
+function parseLapToMs(input) {
+  if (typeof input === 'number') return input;
+  const s = String(input).trim();
+  if (/^\d+$/.test(s)) return Number(s); // doar ms
+
+  // MM:SS.mmm (sau M:SS.mmm)
+  const m = s.match(/^(\d+):([0-5]?\d)\.(\d{1,3})$/);
+  if (!m) throw new Error('Invalid time format (use ms or MM:SS.mmm)');
+  const minutes = Number(m[1]);
+  const seconds = Number(m[2]);
+  const millis  = Number(m[3].padEnd(3, '0'));
+  return minutes * 60_000 + seconds * 1_000 + millis;
+}
+
+// Helper: convertește ms în MM:SS.mmm
+function formatMsToTime(ms) {
+  const minutes = Math.floor(ms / 60000);
+  const seconds = Math.floor((ms % 60000) / 1000);
+  const milliseconds = ms % 1000;
+  return `${minutes}:${seconds.toString().padStart(2, '0')}.${milliseconds.toString().padStart(3, '0')}`;
+}
+
 // ===== Servire fișiere statice (imagini)
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
@@ -350,7 +380,7 @@ app.delete('/api/circuites/:circuitId', authRequired, async (req, res) => {
   }
 });
 
-// ===== TIMES (laps)
+// ===== TIMES (laps) - CU SECTOARE =====
 
 // GET /api/timePilot/:pilotId -> toți timpii pentru un pilot anume
 app.get('/api/timePilot/:pilotId', async (req, res) => {
@@ -367,22 +397,7 @@ app.get('/api/timePilot/:pilotId', async (req, res) => {
   }
 });
 
-// util: parsează "MM:SS.mmm" sau miliseconde numerice
-function parseLapToMs(input) {
-  if (typeof input === 'number') return input;
-  const s = String(input).trim();
-  if (/^\d+$/.test(s)) return Number(s); // doar ms
-
-  // MM:SS.mmm (sau M:SS.mmm)
-  const m = s.match(/^(\d+):([0-5]?\d)\.(\d{1,3})$/);
-  if (!m) throw new Error('Invalid lap time format (use ms or MM:SS.mmm)');
-  const minutes = Number(m[1]);
-  const seconds = Number(m[2]);
-  const millis  = Number(m[3].padEnd(3, '0'));
-  return minutes * 60_000 + seconds * 1_000 + millis;
-}
-
-// GET /api/circuites/:circuitId/times -> toți timpii pentru un circuit
+// GET /api/circuites/:circuitId/times -> toți timpii pentru un circuit CU SECTOARE
 app.get('/api/circuites/:circuitId/times', async (req, res) => {
   try {
     const circuitId = Number(req.params.circuitId);
@@ -392,58 +407,85 @@ app.get('/api/circuites/:circuitId/times', async (req, res) => {
       where: { circuitId },
       select: {
         id: true,
-        lapTimeMs: true,
-        createdAt: true,
-        pilot:   { select: { id: true, firstName: true, lastName: true } },
-        circuit: { select: { id: true, name: true } }
-      },
-      orderBy: { lapTimeMs: 'asc' }
-    });
-
-    res.json(times);
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ error: 'DB error', detail: String(e.message || e) });
-  }
-});
-
-// POST /api/circuites/:circuitId/times -> adaugă timp pentru userul logat SAU admin
-app.post('/api/circuites/:circuitId/times', authRequired, async (req, res) => {
-  try {
-    const circuitId = Number(req.params.circuitId);
-    const { lapTime, pilotId: bodyPilotId } = req.body; // Admin poate trimite pilotId
-    const loggedUserId = req.user.id;
-    const isAdmin = req.user.role === 'Admin';
-
-    if (!circuitId) return res.status(400).json({ error: 'Invalid circuitId' });
-    if (lapTime == null) {
-      return res.status(400).json({ error: 'lapTime required' });
-    }
-
-    // Determină pilotId: Admin poate specifica, Pilot adaugă pentru el
-    let pilotId;
-    if (isAdmin && bodyPilotId) {
-      pilotId = Number(bodyPilotId); // Admin specifică pilotul
-    } else if (req.user.role === 'Pilot') {
-      pilotId = loggedUserId; // Pilot adaugă pentru el
-    } else {
-      return res.status(403).json({ error: 'Only pilots and admins can add times' });
-    }
-
-    const lapTimeMs = parseLapToMs(lapTime);
-
-    const created = await prisma.timeRecord.create({
-      data: { pilotId, circuitId, lapTimeMs },
-      select: {
-        id: true,
-        lapTimeMs: true,
+        sector1Ms: true,
+        sector2Ms: true,
+        sector3Ms: true,
         createdAt: true,
         pilot:   { select: { id: true, firstName: true, lastName: true } },
         circuit: { select: { id: true, name: true } }
       }
     });
 
-    res.status(201).json(created);
+    // Calculează timpul total pentru fiecare record
+    const timesWithTotal = times.map(t => ({
+      ...t,
+      lapTimeMs: calculateTotalTime(t.sector1Ms, t.sector2Ms, t.sector3Ms)
+    }));
+
+    // Sortează după timpul total
+    timesWithTotal.sort((a, b) => a.lapTimeMs - b.lapTimeMs);
+
+    res.json(timesWithTotal);
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'DB error', detail: String(e.message || e) });
+  }
+});
+
+// POST /api/circuites/:circuitId/times -> adaugă timp cu sectoare
+app.post('/api/circuites/:circuitId/times', authRequired, async (req, res) => {
+  try {
+    const circuitId = Number(req.params.circuitId);
+    const { sector1, sector2, sector3, pilotId: bodyPilotId } = req.body;
+    const loggedUserId = req.user.id;
+    const isAdmin = req.user.role === 'Admin';
+
+    if (!circuitId) return res.status(400).json({ error: 'Invalid circuitId' });
+    if (sector1 == null || sector2 == null || sector3 == null) {
+      return res.status(400).json({ error: 'sector1, sector2, sector3 required' });
+    }
+
+    // Determină pilotId: Admin poate specifica, Pilot adaugă pentru el
+    let pilotId;
+    if (isAdmin && bodyPilotId) {
+      pilotId = Number(bodyPilotId);
+    } else if (req.user.role === 'Pilot') {
+      pilotId = loggedUserId;
+    } else {
+      return res.status(403).json({ error: 'Only pilots and admins can add times' });
+    }
+
+    // Parsează timpii sectoare
+    const sector1Ms = parseLapToMs(sector1);
+    const sector2Ms = parseLapToMs(sector2);
+    const sector3Ms = parseLapToMs(sector3);
+
+    const created = await prisma.timeRecord.create({
+      data: { 
+        pilotId, 
+        circuitId, 
+        sector1Ms,
+        sector2Ms,
+        sector3Ms
+      },
+      select: {
+        id: true,
+        sector1Ms: true,
+        sector2Ms: true,
+        sector3Ms: true,
+        createdAt: true,
+        pilot:   { select: { id: true, firstName: true, lastName: true } },
+        circuit: { select: { id: true, name: true } }
+      }
+    });
+
+    // Adaugă timpul total calculat
+    const response = {
+      ...created,
+      lapTimeMs: calculateTotalTime(created.sector1Ms, created.sector2Ms, created.sector3Ms)
+    };
+
+    res.status(201).json(response);
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: 'DB error', detail: String(e.message || e) });
@@ -493,11 +535,11 @@ app.delete('/api/circuites/:circuitId/times/:timeId', authRequired, async (req, 
   }
 });
 
-// POST /api/timePilot/:pilotId/times -> adaugă timp pentru pilotul logat SAU admin pentru orice pilot
+// POST /api/timePilot/:pilotId/times -> adaugă timp cu sectoare pentru pilot
 app.post('/api/timePilot/:pilotId/times', authRequired, async (req, res) => {
   try {
     const pilotId = Number(req.params.pilotId);
-    const { circuitName, country, lapTime } = req.body;
+    const { circuitName, country, sector1, sector2, sector3 } = req.body;
     const loggedUserId = req.user.id;
     const isAdmin = req.user.role === 'Admin';
 
@@ -508,8 +550,8 @@ app.post('/api/timePilot/:pilotId/times', authRequired, async (req, res) => {
       return res.status(403).json({ message: 'You can only add times for yourself' });
     }
 
-    if (!circuitName || !country || lapTime == null) {
-      return res.status(400).json({ message: 'circuitName, country, lapTime required' });
+    if (!circuitName || !country || sector1 == null || sector2 == null || sector3 == null) {
+      return res.status(400).json({ message: 'circuitName, country, sector1, sector2, sector3 required' });
     }
 
     const circuit = await prisma.circuit.findFirst({
@@ -522,20 +564,37 @@ app.post('/api/timePilot/:pilotId/times', authRequired, async (req, res) => {
     });
     if (!circuit) return res.status(400).json({ message: 'Circuit not found' });
 
-    const lapTimeMs = parseLapToMs(lapTime);
+    // Parsează timpii sectoare
+    const sector1Ms = parseLapToMs(sector1);
+    const sector2Ms = parseLapToMs(sector2);
+    const sector3Ms = parseLapToMs(sector3);
 
     const created = await prisma.timeRecord.create({
-      data: { pilotId, circuitId: circuit.id, lapTimeMs },
+      data: { 
+        pilotId, 
+        circuitId: circuit.id, 
+        sector1Ms,
+        sector2Ms,
+        sector3Ms
+      },
       select: {
         id: true,
-        lapTimeMs: true,
+        sector1Ms: true,
+        sector2Ms: true,
+        sector3Ms: true,
         createdAt: true,
         pilot:   { select: { id: true, firstName: true, lastName: true } },
         circuit: { select: { id: true, name: true, country: true } }
       }
     });
 
-    res.status(201).json(created);
+    // Adaugă timpul total calculat
+    const response = {
+      ...created,
+      lapTimeMs: calculateTotalTime(created.sector1Ms, created.sector2Ms, created.sector3Ms)
+    };
+
+    res.status(201).json(response);
   } catch (e) {
     console.error(e);
     res.status(500).json({ message: 'DB error', detail: String(e.message || e) });
@@ -582,6 +641,9 @@ app.delete('/api/timePilot/:pilotId/times/:timeId', authRequired, async (req, re
     res.status(500).json({ error: 'DB error', detail: String(e.message || e) });
   }
 });
+
+const evolutiaMeaRouter = require('./modules/evolutiaMea/evolutiaMea.routes.js');
+app.use('/api/evolutia-mea', evolutiaMeaRouter);
 
 // ===== start
 const PORT = process.env.PORT || 3000;

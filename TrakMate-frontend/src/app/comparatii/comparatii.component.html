@@ -1,0 +1,31 @@
+<app-nav-bar></app-nav-bar>
+
+<section class="page">
+  <header class="page__header">
+    <h1>🏁 Comparare Timpi</h1>
+    <p class="muted">
+      Alege modul de comparație pentru a-ți analiza performanțele
+    </p>
+  </header>
+
+  <div class="comparison-grid">
+    <article 
+      class="comparison-card" 
+      *ngFor="let mode of modes"
+      (click)="navigateTo(mode.route)"
+      [style.--card-color]="mode.color"
+    >
+      <div class="card__icon">{{ mode.icon }}</div>
+      <h3 class="card__title">{{ mode.title }}</h3>
+      <p class="card__description">{{ mode.description }}</p>
+      <div class="card__action">
+        <span class="action-text">Intră</span>
+        <svg class="action-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M5 12h14M12 5l7 7-7 7"/>
+        </svg>
+      </div>
+    </article>
+  </div>
+</section>
+
+<app-footer></app-footer>

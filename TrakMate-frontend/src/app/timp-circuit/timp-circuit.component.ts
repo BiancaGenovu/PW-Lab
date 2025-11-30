@@ -24,10 +24,14 @@ export class TimpCircuitComponent implements OnInit {
   sortBy: 'time' | 'date' = 'time';
 
   showForm = false;
-  form = { lapTime: '' };
+  form = { 
+    sector1: '', 
+    sector2: '', 
+    sector3: '' 
+  };
 
   currentUserId: number | null = null;
-  isAdminUser: boolean = false; // NOU: flag pentru Admin
+  isAdminUser: boolean = false;
 
   constructor(
     private route: ActivatedRoute,
@@ -39,7 +43,7 @@ export class TimpCircuitComponent implements OnInit {
   ngOnInit(): void {
     const user = this.authService.getCurrentUser();
     this.currentUserId = user?.id ?? null;
-    this.isAdminUser = this.authService.isAdmin(); // NOU
+    this.isAdminUser = this.authService.isAdmin();
 
     this.route.paramMap.subscribe(params => {
       const idStr = params.get('circuitId');
@@ -73,12 +77,15 @@ export class TimpCircuitComponent implements OnInit {
 
   submitNewTime(): void {
     if (!this.circuitId) return;
-    const { lapTime } = this.form;
-    if (!lapTime) return;
+    const { sector1, sector2, sector3 } = this.form;
+    if (!sector1 || !sector2 || !sector3) {
+      alert('Completează toate sectoarele!');
+      return;
+    }
 
-    this.svc.addCircuitTime(this.circuitId, { lapTime }).subscribe({
+    this.svc.addCircuitTime(this.circuitId, { sector1, sector2, sector3 }).subscribe({
       next: _created => {
-        this.form = { lapTime: '' };
+        this.form = { sector1: '', sector2: '', sector3: '' };
         this.showForm = false;
         this.fetchTimes(this.circuitId!);
       },
@@ -112,7 +119,6 @@ export class TimpCircuitComponent implements OnInit {
     return this.authService.isLoggedIn();
   }
 
-  // NOU: Admin poate șterge orice timp, Pilot doar al lui
   canDeleteTime(time: TimeModel): boolean {
     return this.isAdminUser || this.isMyTime(time);
   }
@@ -138,5 +144,14 @@ export class TimpCircuitComponent implements OnInit {
     const seconds = totalSeconds % 60;
     const pad = (n: number, w: number) => n.toString().padStart(w, '0');
     return `${pad(minutes, 2)}:${pad(seconds, 2)}.${pad(milliseconds, 3)}`;
+  }
+
+  formatSectorTime(ms: number): string {
+    if (ms == null) return 'N/A';
+    const totalSeconds = Math.floor(ms / 1000);
+    const milliseconds = ms % 1000;
+    const seconds = totalSeconds % 60;
+    const pad = (n: number, w: number) => n.toString().padStart(w, '0');
+    return `${pad(seconds, 2)}.${pad(milliseconds, 3)}`;
   }
 }

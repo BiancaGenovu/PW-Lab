@@ -18,21 +18,24 @@ import { FooterComponent } from '../footer/footer.component';
   styleUrls: ['./timp-pilot.component.css'],
 })
 export class TimpPilotComponent implements OnInit {
-  // date afișare
   times: TimeModel[] = [];
   pilotName = 'Pilot Necunoscut';
   loading = true;
   pilotId: number | null = null;
 
-  // sortare
   sortBy: 'time' | 'date' = 'time';
 
-  // formular creare timp pentru pilot
   showForm = false;
-  form = { circuitName: '', country: '', lapTime: '' };
+  form = { 
+    circuitName: '', 
+    country: '', 
+    sector1: '', 
+    sector2: '', 
+    sector3: '' 
+  };
 
-  currentUserId: number | null = null; // pentru verificare
-  isAdminUser: boolean = false; // NOU: flag pentru Admin
+  currentUserId: number | null = null;
+  isAdminUser: boolean = false;
 
   constructor(
     private route: ActivatedRoute,
@@ -42,16 +45,13 @@ export class TimpPilotComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    // Verifică dacă e logat și ia userId
     const user = this.authService.getCurrentUser();
     this.currentUserId = user?.id ?? null;
-    this.isAdminUser = this.authService.isAdmin(); // NOU
+    this.isAdminUser = this.authService.isAdmin();
 
     this.route.paramMap.subscribe((params) => {
       const idString = params.get('pilotId');
       this.pilotId = idString ? Number(idString) : null;
-
-      // preia numele din state (fallback dacă nu există date din API)
       this.pilotName = history.state.pilotName || 'Pilot Necunoscut';
 
       if (this.pilotId) {
@@ -70,7 +70,6 @@ export class TimpPilotComponent implements OnInit {
         this.times = data ?? [];
         this.loading = false;
 
-        // dacă API-ul a returnat pilotul, suprascrie numele
         if (this.times.length && this.times[0].pilot) {
           this.pilotName = `${this.times[0].pilot.firstName} ${this.times[0].pilot.lastName}`;
         }
@@ -84,19 +83,20 @@ export class TimpPilotComponent implements OnInit {
     });
   }
 
-  /** Trimite spre backend un timp nou pentru pilotul curent */
   submitNewTime(): void {
     if (!this.pilotId) return;
 
-    const { circuitName, country, lapTime } = this.form;
-    if (!circuitName || !country || !lapTime) return;
+    const { circuitName, country, sector1, sector2, sector3 } = this.form;
+    if (!circuitName || !country || !sector1 || !sector2 || !sector3) {
+      alert('Completează toate câmpurile!');
+      return;
+    }
 
     this.timpPilotService
-      .addPilotTime(this.pilotId, { circuitName, country, lapTime })
+      .addPilotTime(this.pilotId, { circuitName, country, sector1, sector2, sector3 })
       .subscribe({
         next: (_created) => {
-          // curățare + reload
-          this.form = { circuitName: '', country: '', lapTime: '' };
+          this.form = { circuitName: '', country: '', sector1: '', sector2: '', sector3: '' };
           this.showForm = false;
           this.loadPilotTimes(this.pilotId!);
         },
@@ -107,7 +107,6 @@ export class TimpPilotComponent implements OnInit {
       });
   }
 
-  // Șterge timp
   deleteTime(timeId: number): void {
     if (!this.pilotId) return;
     if (!confirm('Sigur vrei să ștergi acest timp?')) return;
@@ -123,42 +122,36 @@ export class TimpPilotComponent implements OnInit {
     });
   }
 
-  // Verifică dacă timpul aparține userului logat
   isMyTime(time: TimeModel): boolean {
     return this.currentUserId !== null && time.pilot.id === this.currentUserId;
   }
 
-  // Verifică dacă userul e logat
   isLoggedIn(): boolean {
     return this.authService.isLoggedIn();
   }
 
-  // MODIFICAT: Admin poate edita orice pagină, Pilot doar a lui
   canEditPage(): boolean {
     return this.isAdminUser || (this.currentUserId !== null && this.currentUserId === this.pilotId);
   }
 
-  // NOU: Admin poate șterge orice timp, Pilot doar al lui
   canDeleteTime(time: TimeModel): boolean {
     return this.isAdminUser || this.isMyTime(time);
   }
 
-  /** Sortează local lista după cel mai rapid timp sau cea mai recentă dată */
   applySort(): void {
     if (!this.times?.length) return;
 
     this.times.sort((a, b) => {
       if (this.sortBy === 'time') {
-        return a.lapTimeMs - b.lapTimeMs; // mai mic = mai rapid
+        return a.lapTimeMs - b.lapTimeMs;
       } else {
         return (
           new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        ); // recent primele
+        );
       }
     });
   }
 
-  /** Formatează ms -> MM:SS.mmm */
   formatLapTime(ms: number): string {
     if (ms === undefined || ms === null) return 'N/A';
     const totalSeconds = Math.floor(ms / 1000);
@@ -168,5 +161,14 @@ export class TimpPilotComponent implements OnInit {
 
     const pad = (n: number, w: number) => n.toString().padStart(w, '0');
     return `${pad(minutes, 2)}:${pad(seconds, 2)}.${pad(milliseconds, 3)}`;
+  }
+
+  formatSectorTime(ms: number): string {
+    if (ms == null) return 'N/A';
+    const totalSeconds = Math.floor(ms / 1000);
+    const milliseconds = ms % 1000;
+    const seconds = totalSeconds % 60;
+    const pad = (n: number, w: number) => n.toString().padStart(w, '0');
+    return `${pad(seconds, 2)}.${pad(milliseconds, 3)}`;
   }
 }

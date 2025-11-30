@@ -28,4 +28,7 @@ export class NavBarComponent {
   changeToAbout_Us() {
     this.router.navigate(["/about-us"]); // make sure route matches
   }
+  changeToComparatii() {
+    this.router.navigate(["/comparatii"]); // make sure route matches
+  }
 }

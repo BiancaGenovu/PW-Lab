@@ -27,7 +27,7 @@ export class TimpCircuitService {
 
   addCircuitTime(
     circuitId: number,
-    payload: { lapTime: string | number }
+    payload: { sector1: string | number; sector2: string | number; sector3: string | number }
   ): Observable<TimeModel> {
     return this.http.post<TimeModel>(
       `${this.baseApiUrl}/${circuitId}/times`, 

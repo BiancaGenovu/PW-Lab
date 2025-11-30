@@ -1,33 +1,40 @@
-// modules/time/time.model.js
+// modules/timePilot/timePilot.model.js
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
-async function getAllTimes() {
-  return prisma.timeRecord.findMany({
-    orderBy: { lapTimeMs: 'asc' },
-    select: {
-      id: true,
-      lapTimeMs: true,
-      createdAt: true,
-      pilot:   { select: { id: true, firstName: true, lastName: true, email: true, role: true } },
-      circuit: { select: { id: true, name: true, country: true, km: true } },
-    },
-  });
+// Helper: calculează timpul total
+function calculateTotalTime(sector1Ms, sector2Ms, sector3Ms) {
+  return sector1Ms + sector2Ms + sector3Ms;
 }
 
-async function getTimesByCircuitId(circuitId) {
-  const targetCircuitId = Number(circuitId);   // NU mai suprascrie cu 1
-  return prisma.timeRecord.findMany({
-    where: { circuitId: targetCircuitId },
-    orderBy: { lapTimeMs: 'asc' },
+async function getTimesByPilotId(pilotId) {
+  const id = Number(pilotId);
+  if (!id) {
+    throw new Error('Invalid pilot ID');
+  }
+
+  const times = await prisma.timeRecord.findMany({
+    where: { pilotId: id },
     select: {
       id: true,
-      lapTimeMs: true,
+      sector1Ms: true,
+      sector2Ms: true,
+      sector3Ms: true,
       createdAt: true,
-      pilot:   { select: { id: true, firstName: true, lastName: true } },
-      circuit: { select: { id: true, name: true, country: true } },
-    },
+      pilot: { select: { id: true, firstName: true, lastName: true } },
+      circuit: { select: { id: true, name: true, country: true } }
+    }
   });
+
+  // Adaugă timpul total calculat și sortează
+  return times
+    .map(t => ({
+      ...t,
+      lapTimeMs: calculateTotalTime(t.sector1Ms, t.sector2Ms, t.sector3Ms)
+    }))
+    .sort((a, b) => a.lapTimeMs - b.lapTimeMs);
 }
 
-module.exports = { getAllTimes, getTimesByCircuitId };
+module.exports = {
+  getTimesByPilotId
+};

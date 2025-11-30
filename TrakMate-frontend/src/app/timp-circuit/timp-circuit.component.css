@@ -336,3 +336,28 @@ html, body, .page {
         font-size: 0.8rem;
     }
 }
+
+/* Styling pentru timpii de sector */
+.sector-time {
+    background: rgba(100, 100, 255, 0.15) !important;
+    padding: 0.375rem 0.75rem;
+    border-radius: 0.375rem;
+    font-family: 'Courier New', monospace;
+    font-size: 0.875rem;
+    font-weight: 600;
+    display: inline-block;
+    border: 1px solid rgba(100, 100, 255, 0.3);
+    letter-spacing: 0.05em;
+    color: #9999ff;
+}
+
+/* Ajustări responsive pentru tabelul cu sectoare */
+@media (max-width: 1024px) {
+    .table-container {
+        overflow-x: auto;
+    }
+
+    .data-table {
+        min-width: 900px;
+    }
+}

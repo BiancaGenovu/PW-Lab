@@ -1,0 +1,175 @@
+/* ===== COMPARISON PAGE (FULL WIDTH) ===== */
+*, *::before, *::after { box-sizing: border-box; }
+
+.page {
+  width: 100%;
+  margin-left: 0;
+  background: #0f0f10;
+  min-height: 100vh;
+  padding: 5rem 2rem;
+}
+
+/* ===== HEADER ===== */
+.page__header {
+  text-align: center;
+  max-width: 800px;
+  margin: 0 auto 4rem;
+}
+
+.page__header h1 {
+  font-size: 3rem;
+  font-weight: 800;
+  color: #ffffff;
+  margin: 0 0 1rem 0;
+  letter-spacing: -0.02em;
+}
+
+.page__header .muted {
+  font-size: 1.125rem;
+  color: rgba(255, 255, 255, 0.72);
+  margin: 0;
+  line-height: 1.6;
+}
+
+/* ===== COMPARISON GRID ===== */
+.comparison-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+/* ===== COMPARISON CARD ===== */
+.comparison-card {
+  background: #151515;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+  padding: 2rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.25);
+}
+
+/* Subtle color accent on left border */
+.comparison-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: var(--card-color, #e10600);
+  opacity: 0.6;
+  transition: opacity 0.3s ease;
+}
+
+.comparison-card:hover::before {
+  opacity: 1;
+}
+
+.comparison-card:hover {
+  border-color: rgba(255, 255, 255, 0.12);
+  transform: translateY(-4px);
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.35),
+              0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+/* ===== CARD ICON ===== */
+.card__icon {
+  width: 72px;
+  height: 72px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.04);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  margin-bottom: 1.5rem;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+  transition: all 0.3s ease;
+}
+
+.comparison-card:hover .card__icon {
+  background: rgba(255, 255, 255, 0.08);
+  transform: scale(1.05);
+}
+
+/* ===== CARD TITLE ===== */
+.card__title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0 0 0.75rem 0;
+  letter-spacing: 0.2px;
+}
+
+/* ===== CARD DESCRIPTION ===== */
+.card__description {
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.65);
+  margin: 0 0 1.5rem 0;
+}
+
+/* ===== CARD ACTION ===== */
+.card__action {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--card-color, #e10600);
+  font-weight: 600;
+  font-size: 0.9375rem;
+  transition: gap 0.3s ease;
+}
+
+.comparison-card:hover .card__action {
+  gap: 0.75rem;
+}
+
+.action-text {
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-size: 0.875rem;
+}
+
+.action-arrow {
+  width: 20px;
+  height: 20px;
+  transition: transform 0.3s ease;
+}
+
+.comparison-card:hover .action-arrow {
+  transform: translateX(4px);
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 1024px) {
+  .page__header h1 { font-size: 2.5rem; }
+  .comparison-grid {
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .page { padding: 3rem 1rem; }
+  .page__header { margin-bottom: 3rem; }
+  .page__header h1 { font-size: 2rem; }
+  .comparison-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  .comparison-card { padding: 1.5rem; }
+}
+
+@media (max-width: 480px) {
+  .card__icon {
+    width: 64px;
+    height: 64px;
+    font-size: 1.75rem;
+  }
+  .card__title { font-size: 1.25rem; }
+}

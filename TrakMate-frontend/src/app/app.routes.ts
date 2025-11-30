@@ -9,6 +9,7 @@ import { RegisterComponent } from './register/register.component';
 import { TimpCircuitComponent } from './timp-circuit/timp-circuit.component';
 import { TimpPilotComponent } from './timp-pilot/timp-pilot.component';
 import { authGuard } from './guards/auth.guard';
+import { ComparatiiComponent } from './comparatii/comparatii.component';
 
 export const routes: Routes = [
     
@@ -19,6 +20,8 @@ export const routes: Routes = [
   {path: "about-us", component : AboutUsComponent },
   {path: "login", component : LoginComponent },
   {path: "register",component: RegisterComponent},
+  {path: "comparatii", component: ComparatiiComponent},
+  {path: "evolutia-mea", loadComponent: () => import('./evolutia-mea/evolutia-mea.component').then(m => m.EvolutiaMeaComponent), canActivate: [authGuard]},
   {path: 'circuites/:circuitId/times',
   component: TimpCircuitComponent},
   {path: 'pilot/:pilotId/times',

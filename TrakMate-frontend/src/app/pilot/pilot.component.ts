@@ -7,6 +7,7 @@ import { AuthService } from '../services/auth.service';
 import { pilotModel } from '../shared/pilotModel';
 import { FooterComponent } from '../footer/footer.component';
 import { NavBarComponent } from '../nav-bar/nav-bar.component';
+import { environment } from '../shared/environment';
 
 @Component({
   selector: 'app-pilot',
@@ -23,7 +24,7 @@ export class PilotComponent implements OnInit {
   q = ''; 
   sortBy: 'firstName' | 'lastName' = 'lastName';
 
-  // NOU: Pentru Admin
+  // Pentru Admin
   isAdminUser: boolean = false;
 
   constructor(
@@ -60,7 +61,7 @@ export class PilotComponent implements OnInit {
     });
   }
 
-  // NOU: Șterge pilot (Admin)
+  // Șterge pilot (Admin)
   deletePilot(pilotId: number, pilotName: string): void {
     if (!confirm(`Sigur vrei să ștergi pilotul "${pilotName}"? Toate timpiile lui vor fi șterse!`)) {
       return;
@@ -75,6 +76,14 @@ export class PilotComponent implements OnInit {
         alert(err?.error?.error || 'Nu s-a putut șterge pilotul.');
       }
     });
+  }
+
+  // NOU: Generează URL complet pentru imaginea pilotului
+  getPilotImageUrl(pilot: pilotModel): string {
+    if (pilot.profileImage) {
+      return `${environment.backend_api}${pilot.profileImage}`;
+    }
+    return 'https://via.placeholder.com/120/333333/999999?text=' + pilot.firstName.charAt(0) + pilot.lastName.charAt(0);
   }
 
   // --- Logica de Filtrare și Sortare ---

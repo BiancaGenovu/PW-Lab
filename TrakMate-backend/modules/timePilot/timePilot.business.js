@@ -7,11 +7,11 @@ async function listPilotTimes(pilotId) {
 }
 
 async function addPilotTime(pilotId, payload) {
-  // payload: { circuitName, country, lapTime }
+  // payload: { circuitName, country, sector1, sector2, sector3 }
   return createTimeForPilot({ pilotId, ...payload });
 }
 
 module.exports = {
   listPilotTimes,
   addPilotTime
-};
+}; 

@@ -45,18 +45,19 @@
 
   <div class="grid" *ngIf="!loading && filtered.length">
     <article class="card" *ngFor="let p of filtered">
+      <!-- NOU: Avatar pilot -->
+      <div class="pilot-avatar">
+        <img [src]="getPilotImageUrl(p)" [alt]="p.firstName + ' ' + p.lastName" />
+      </div>
+
       <div class="card__head">
         <h3 class="card__title">{{ p.firstName }} {{ p.lastName }}</h3>
-      </div>
-      
-      <div class="card__meta">
-        <!-- Loc pentru metadate suplimentare (ex: Rol) -->
       </div>
       
       <div class="card__actions">
         <button class="btn small" (click)="viewPilotTimes(p)">Vezi Timpi</button>
         
-        <!-- NOU: Buton Șterge (doar Admin) -->
+        <!-- Buton Șterge (doar Admin) -->
         <button 
           class="btn btn-delete small" 
           *ngIf="isAdminUser" 

@@ -27,7 +27,13 @@ export class TimpPilotService {
 
   addPilotTime(
     pilotId: number,
-    payload: { circuitName: string; country: string; lapTime: string | number }
+    payload: { 
+      circuitName: string; 
+      country: string; 
+      sector1: string | number;
+      sector2: string | number;
+      sector3: string | number;
+    }
   ): Observable<TimeModel> {
     return this.http.post<TimeModel>(
       `${this.apiUrl}/${pilotId}/times`, 

@@ -16,21 +16,23 @@
       <option value="date">Sortează: Data (cel mai recent)</option>
     </select>
 
-    <!-- MODIFICAT: Afișează butonul dacă e pagina TA SAU dacă ești Admin -->
     <button class="btn" *ngIf="canEditPage()" (click)="showForm = !showForm">
       {{ showForm ? 'Anulează' : 'Adaugă timp' }}
     </button>
   </div>
 
-  <!-- MODIFICAT: Formular apare dacă poți edita pagina -->
   <form class="add-time" *ngIf="showForm && canEditPage()" (ngSubmit)="submitNewTime()">
     <div class="row">
       <input type="text" placeholder="Circuit (ex. Silverstone)" [(ngModel)]="form.circuitName" name="circuitName" required />
       <input type="text" placeholder="Țară (ex. Marea Britanie)" [(ngModel)]="form.country" name="country" required />
-      <input type="text" placeholder="Timp (MM:SS.mmm sau ms)" [(ngModel)]="form.lapTime" name="lapTime" required />
+    </div>
+    <div class="row">
+      <input type="text" placeholder="Sector 1 (MM:SS.mmm sau ms)" [(ngModel)]="form.sector1" name="sector1" required />
+      <input type="text" placeholder="Sector 2 (MM:SS.mmm sau ms)" [(ngModel)]="form.sector2" name="sector2" required />
+      <input type="text" placeholder="Sector 3 (MM:SS.mmm sau ms)" [(ngModel)]="form.sector3" name="sector3" required />
       <button class="btn" type="submit">Salvează</button>
     </div>
-    <p class="muted">Exemple: <code>01:23.250</code> sau <code>83250</code> (ms)</p>
+    <p class="muted">Exemple: <code>00:25.340</code> sau <code>25340</code> (ms) pentru fiecare sector</p>
   </form>
 
   <div class="empty" *ngIf="loading">
@@ -51,21 +53,26 @@
         <tr>
           <th>#</th>
           <th>Circuit</th>
-          <th>Timp Tur</th>
           <th>Țară</th>
+          <th>Sector 1</th>
+          <th>Sector 2</th>
+          <th>Sector 3</th>
+          <th>Timp Total</th>
           <th>Data</th>
-          <th *ngIf="canEditPage()">Acțiuni</th> <!-- MODIFICAT: coloană pentru acțiuni -->
+          <th *ngIf="canEditPage()">Acțiuni</th>
         </tr>
       </thead>
       <tbody>
         <tr *ngFor="let time of times; let i = index">
           <td><span class="rank" *ngIf="i === 0">🏆</span><span *ngIf="i > 0">{{ i + 1 }}</span></td>
           <td>{{ time.circuit.name }}</td>
-          <td><span class="lap-time" [class.best-lap]="i === 0">{{ formatLapTime(time.lapTimeMs) }}</span></td>
           <td>{{ time.circuit.country }}</td>
+          <td><span class="sector-time">{{ formatSectorTime(time.sector1Ms) }}</span></td>
+          <td><span class="sector-time">{{ formatSectorTime(time.sector2Ms) }}</span></td>
+          <td><span class="sector-time">{{ formatSectorTime(time.sector3Ms) }}</span></td>
+          <td><span class="lap-time" [class.best-lap]="i === 0">{{ formatLapTime(time.lapTimeMs) }}</span></td>
           <td>{{ time.createdAt | date: 'mediumDate' }}</td>
           <td *ngIf="canEditPage()">
-            <!-- MODIFICAT: Buton șterge pentru Admin sau pentru timpurile tale -->
             <button 
               class="btn btn-delete" 
               *ngIf="canDeleteTime(time)"

@@ -1,0 +1,212 @@
+<app-nav-bar></app-nav-bar>
+
+<section class="page">
+  <header class="page__header">
+    <button class="btn-back" (click)="goBack()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M19 12H5M12 19l-7-7 7-7"/>
+      </svg>
+      Înapoi
+    </button>
+    <h1>📈 Evoluția Mea</h1>
+    <p class="muted">Analizează-ți progresul și vezi cum ai evoluat pe circuit</p>
+  </header>
+
+  <!-- Selector Circuit -->
+  <div class="selector-container">
+    <label for="circuit-select" class="selector-label">Selectează Circuit:</label>
+    <select 
+      id="circuit-select"
+      class="circuit-select" 
+      [(ngModel)]="selectedCircuitId" 
+      (change)="onCircuitChange()"
+      [disabled]="loadingCircuits"
+    >
+      <option [value]="null" disabled selected>-- Alege un circuit --</option>
+      <option *ngFor="let circuit of circuits" [value]="circuit.id">
+        {{ circuit.name }} ({{ circuit.country }})
+      </option>
+    </select>
+  </div>
+
+  <!-- Loading -->
+  <div class="empty" *ngIf="loading">
+    <div class="spinner"></div>
+    <p>Se încarcă datele...</p>
+  </div>
+
+  <!-- No Data -->
+  <div class="empty" *ngIf="!loading && data && data.stats === null">
+    <div class="empty__card">
+      <h3>📭 Niciun timp înregistrat</h3>
+      <p class="muted">{{ data.message || 'Nu ai încă timpi pe acest circuit.' }}</p>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="content" *ngIf="!loading && data && data.stats">
+    
+    <!-- Stats Cards -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon">🏆</div>
+        <div class="stat-content">
+          <span class="stat-label">Cel mai bun timp</span>
+          <span class="stat-value best">{{ formatTime(data.stats.bestTime) }}</span>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon">📊</div>
+        <div class="stat-content">
+          <span class="stat-label">Timp mediu</span>
+          <span class="stat-value">{{ formatTime(data.stats.avgTime) }}</span>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon">📈</div>
+        <div class="stat-content">
+          <span class="stat-label">Îmbunătățire</span>
+          <span 
+            class="stat-value" 
+            [class.positive]="data.stats.improvement < 0"
+            [class.negative]="data.stats.improvement > 0"
+          >
+            {{ formatDiff(data.stats.improvement) }}
+          </span>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon">🎯</div>
+        <div class="stat-content">
+          <span class="stat-label">Consistency</span>
+          <span class="stat-value">{{ data.stats.consistency }}%</span>
+          <div class="consistency-bar">
+            <div 
+              class="consistency-fill" 
+              [style.width.%]="data.stats.consistency"
+              [style.background]="getConsistencyColor(data.stats.consistency)"
+            ></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Evolution Chart -->
+    <div class="chart-container">
+      <h2 class="section-title">📉 Evoluția Timpilor</h2>
+      <div class="chart">
+        <div class="chart-line">
+          <div 
+            class="chart-point" 
+            *ngFor="let time of data.times; let i = index"
+            [style.left.%]="(i / (data.times.length - 1)) * 100"
+            [style.bottom.%]="( (data.stats.worstTime - time.lapTimeMs) / getDeltaRange() ) * 100" 
+            [class.best]="time.lapTimeMs === data.stats.bestTime"
+            [title]="formatTime(time.lapTimeMs) + ' - ' + (time.createdAt | date: 'short')"
+          >
+            <span class="point-label" *ngIf="time.lapTimeMs === data.stats.bestTime">🏆</span>
+          </div>
+        </div>
+        <div class="chart-labels">
+          <span *ngFor="let time of data.times; let i = index" class="chart-label">
+            {{ i + 1 }}
+          </span>
+        </div>
+      </div>
+      <p class="chart-info">Total tururi: {{ data.stats.totalRuns }}</p>
+    </div>
+
+    <!-- Sector Comparison -->
+    <div class="comparison-container">
+      <h2 class="section-title">🔍 Comparație Sectoare (Ultimul vs Best)</h2>
+      <table class="comparison-table">
+        <thead>
+          <tr>
+            <th>Sector</th>
+            <th>Ultimul Timp</th>
+            <th>Cel Mai Bun</th>
+            <th>Diferență</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Sector 1</strong></td>
+            <td>
+              <span class="time-badge">{{ formatSectorTime(data.stats.sectorComparison.sector1.last) }}</span>
+            </td>
+            <td>
+              <span class="time-badge best">{{ formatSectorTime(data.stats.sectorComparison.sector1.best) }}</span>
+            </td>
+            <td>
+              <span class="diff-badge" [ngClass]="getDiffClass(data.stats.sectorComparison.sector1.diff)">
+                {{ formatDiff(data.stats.sectorComparison.sector1.diff) }}
+              </span>
+            </td>
+          </tr>
+          <tr>
+            <td><strong>Sector 2</strong></td>
+            <td>
+              <span class="time-badge">{{ formatSectorTime(data.stats.sectorComparison.sector2.last) }}</span>
+            </td>
+            <td>
+              <span class="time-badge best">{{ formatSectorTime(data.stats.sectorComparison.sector2.best) }}</span>
+            </td>
+            <td>
+              <span class="diff-badge" [ngClass]="getDiffClass(data.stats.sectorComparison.sector2.diff)">
+                {{ formatDiff(data.stats.sectorComparison.sector2.diff) }}
+              </span>
+            </td>
+          </tr>
+          <tr>
+            <td><strong>Sector 3</strong></td>
+            <td>
+              <span class="time-badge">{{ formatSectorTime(data.stats.sectorComparison.sector3.last) }}</span>
+            </td>
+            <td>
+              <span class="time-badge best">{{ formatSectorTime(data.stats.sectorComparison.sector3.best) }}</span>
+            </td>
+            <td>
+              <span class="diff-badge" [ngClass]="getDiffClass(data.stats.sectorComparison.sector3.diff)">
+                {{ formatDiff(data.stats.sectorComparison.sector3.diff) }}
+              </span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- All Times List -->
+    <div class="times-list">
+      <h2 class="section-title">📋 Istoric Timpi</h2>
+      <div class="times-grid">
+        <div 
+          class="time-card" 
+          *ngFor="let time of data.times; let i = index"
+          [class.best-time]="time.lapTimeMs === data.stats.bestTime"
+        >
+          <div class="time-card-header">
+            <span class="time-rank">
+              <span *ngIf="time.lapTimeMs === data.stats.bestTime">🏆</span>
+              <span *ngIf="time.lapTimeMs !== data.stats.bestTime">#{{ i + 1 }}</span>
+            </span>
+            <span class="time-date">{{ time.createdAt | date: 'short' }}</span>
+          </div>
+          <div class="time-card-main">
+            <span class="time-value">{{ formatTime(time.lapTimeMs) }}</span>
+          </div>
+          <div class="time-card-sectors">
+            <span class="sector">S1: {{ formatSectorTime(time.sector1Ms) }}</span>
+            <span class="sector">S2: {{ formatSectorTime(time.sector2Ms) }}</span>
+            <span class="sector">S3: {{ formatSectorTime(time.sector3Ms) }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<app-footer></app-footer>

@@ -12,7 +12,10 @@ export interface CircuitMeta {
 
 export interface TimeModel {
   id: number;
-  lapTimeMs: number;
+  sector1Ms: number;
+  sector2Ms: number;
+  sector3Ms: number;
+  lapTimeMs: number; // calculat automat
   createdAt: string | Date;
   pilot: PilotMeta;
   circuit: CircuitMeta;
