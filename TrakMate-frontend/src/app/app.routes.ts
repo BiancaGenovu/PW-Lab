@@ -22,10 +22,9 @@ export const routes: Routes = [
   {path: "register",component: RegisterComponent},
   {path: "comparatii", component: ComparatiiComponent},
   {path: "evolutia-mea", loadComponent: () => import('./evolutia-mea/evolutia-mea.component').then(m => m.EvolutiaMeaComponent), canActivate: [authGuard]},
-  {path: 'circuites/:circuitId/times',
-  component: TimpCircuitComponent},
-  {path: 'pilot/:pilotId/times',
-  component: TimpPilotComponent}
+  {path: "comparare-pilot", loadComponent: () => import('./comparare-pilot/comparare-pilot.component').then(m => m.CompararePilotComponent), canActivate: [authGuard]},
+  {path: 'circuites/:circuitId/times', component: TimpCircuitComponent},
+  {path: 'pilot/:pilotId/times', component: TimpPilotComponent}
 
 ];
 

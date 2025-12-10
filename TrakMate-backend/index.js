@@ -645,6 +645,9 @@ app.delete('/api/timePilot/:pilotId/times/:timeId', authRequired, async (req, re
 const evolutiaMeaRouter = require('./modules/evolutiaMea/evolutiaMea.routes.js');
 app.use('/api/evolutia-mea', evolutiaMeaRouter);
 
+const compararePilotRouter = require('./modules/comparare-pilot/comparare-pilot.routes.js');
+app.use('/api/comparare-pilot', compararePilotRouter);
+
 // ===== start
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

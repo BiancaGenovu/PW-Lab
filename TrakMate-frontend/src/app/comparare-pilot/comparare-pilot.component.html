@@ -1,0 +1,270 @@
+<app-nav-bar></app-nav-bar>
+
+<section class="page">
+  <header class="page__header">
+    <button class="btn-back" (click)="goBack()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M19 12H5M12 19l-7-7 7-7"/>
+      </svg>
+      Înapoi
+    </button>
+    <h1>⚔️ Duel cu Pilot</h1>
+    <p class="muted">Alege un rival și vedeți cine este mai rapid pe circuit</p>
+  </header>
+
+  <!-- Selectors -->
+  <div class="selectors-container">
+    <div class="selector-group">
+      <label for="circuit-select" class="selector-label">Selectează Circuit:</label>
+      <select 
+        id="circuit-select"
+        class="selector" 
+        [(ngModel)]="selectedCircuitId"
+        [disabled]="loadingCircuits"
+      >
+        <option [value]="null" disabled selected>-- Alege un circuit --</option>
+        <option *ngFor="let circuit of circuits" [value]="circuit.id">
+          {{ circuit.name }} ({{ circuit.country }})
+        </option>
+      </select>
+    </div>
+
+    <div class="selector-group">
+      <label for="pilot-select" class="selector-label">Selectează Rival:</label>
+      <select 
+        id="pilot-select"
+        class="selector" 
+        [(ngModel)]="selectedRivalId"
+        [disabled]="loadingPilots"
+      >
+        <option [value]="null" disabled selected>-- Alege un pilot --</option>
+        <option *ngFor="let pilot of pilots" [value]="pilot.id">
+          {{ pilot.firstName }} {{ pilot.lastName }}
+        </option>
+      </select>
+    </div>
+
+    <button 
+      class="btn-compare" 
+      (click)="onCompare()"
+      [disabled]="!selectedCircuitId || !selectedRivalId || loading"
+    >
+      {{ loading ? 'Se încarcă...' : 'Compară!' }}
+    </button>
+  </div>
+
+  <!-- Loading -->
+  <div class="empty" *ngIf="loading">
+    <div class="spinner"></div>
+    <p>Se compară timpii...</p>
+  </div>
+
+  <!-- No Data -->
+  <div class="empty" *ngIf="!loading && data && !data.comparison">
+    <div class="empty__card">
+      <h3>📭 Nu există date</h3>
+      <p class="muted">{{ data.message }}</p>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="content" *ngIf="!loading && data && data.comparison">
+    
+    <!-- Winner Banner -->
+    <div class="winner-banner" [class.you-win]="data.comparison.winner === 'you'" [class.rival-win]="data.comparison.winner === 'rival'" [class.tie]="data.comparison.winner === 'tie'">
+      <div class="winner-icon">
+        <span *ngIf="data.comparison.winner === 'you'">🏆</span>
+        <span *ngIf="data.comparison.winner === 'rival'">😔</span>
+        <span *ngIf="data.comparison.winner === 'tie'">🤝</span>
+      </div>
+      <div class="winner-content">
+        <h2 class="winner-title" *ngIf="data.comparison.winner === 'you'">
+          Felicitări! Ai câștigat!
+        </h2>
+        <h2 class="winner-title" *ngIf="data.comparison.winner === 'rival'">
+          Aproape! Mai încearcă!
+        </h2>
+        <h2 class="winner-title" *ngIf="data.comparison.winner === 'tie'">
+          Egalitate Perfectă!
+        </h2>
+        <p class="winner-diff">
+          Diferență: <strong>{{ formatDiff(data.comparison.timeDiff) }}</strong>
+        </p>
+      </div>
+    </div>
+
+    <!-- Pilots Comparison Cards -->
+    <div class="pilots-comparison">
+      <!-- YOU -->
+      <div class="pilot-card you">
+        <div class="pilot-header">
+          <div class="pilot-avatar">
+            <img [src]="data.myTime ? getPilotImageUrl(data.myTime.pilot) : ''" alt="You" *ngIf="data.myTime">
+          </div>
+          <div class="pilot-info">
+            <span class="pilot-label">TU</span>
+            <h3 class="pilot-name" *ngIf="data.myTime">
+              {{ data.myTime.pilot.firstName }} {{ data.myTime.pilot.lastName }}
+            </h3>
+          </div>
+        </div>
+        <div class="pilot-time" *ngIf="data.myTime">
+          <span class="time-label">Cel mai bun timp</span>
+          <span class="time-value">{{ formatTime(data.myTime.lapTimeMs) }}</span>
+        </div>
+        <div class="pilot-sectors" *ngIf="data.myTime">
+          <div class="sector-item" [class.winner]="data.comparison.sectorComparison.sector1.winner === 'you'">
+            <span class="sector-label">S1</span>
+            <span class="sector-value">{{ formatSectorTime(data.myTime.sector1Ms) }}</span>
+            <span class="sector-badge" *ngIf="data.comparison.sectorComparison.sector1.winner === 'you'">✓</span>
+          </div>
+          <div class="sector-item" [class.winner]="data.comparison.sectorComparison.sector2.winner === 'you'">
+            <span class="sector-label">S2</span>
+            <span class="sector-value">{{ formatSectorTime(data.myTime.sector2Ms) }}</span>
+            <span class="sector-badge" *ngIf="data.comparison.sectorComparison.sector2.winner === 'you'">✓</span>
+          </div>
+          <div class="sector-item" [class.winner]="data.comparison.sectorComparison.sector3.winner === 'you'">
+            <span class="sector-label">S3</span>
+            <span class="sector-value">{{ formatSectorTime(data.myTime.sector3Ms) }}</span>
+            <span class="sector-badge" *ngIf="data.comparison.sectorComparison.sector3.winner === 'you'">✓</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- VS -->
+      <div class="vs-divider">
+        <span class="vs-text">VS</span>
+      </div>
+
+      <!-- RIVAL -->
+      <div class="pilot-card rival">
+        <div class="pilot-header">
+          <div class="pilot-avatar">
+            <img [src]="data.rivalTime ? getPilotImageUrl(data.rivalTime.pilot) : ''" alt="Rival" *ngIf="data.rivalTime">
+          </div>
+          <div class="pilot-info">
+            <span class="pilot-label">RIVAL</span>
+            <h3 class="pilot-name" *ngIf="data.rivalTime">
+              {{ data.rivalTime.pilot.firstName }} {{ data.rivalTime.pilot.lastName }}
+            </h3>
+          </div>
+        </div>
+        <div class="pilot-time" *ngIf="data.rivalTime">
+          <span class="time-label">Cel mai bun timp</span>
+          <span class="time-value">{{ formatTime(data.rivalTime.lapTimeMs) }}</span>
+        </div>
+        <div class="pilot-sectors" *ngIf="data.rivalTime">
+          <div class="sector-item" [class.winner]="data.comparison.sectorComparison.sector1.winner === 'rival'">
+            <span class="sector-label">S1</span>
+            <span class="sector-value">{{ formatSectorTime(data.rivalTime.sector1Ms) }}</span>
+            <span class="sector-badge" *ngIf="data.comparison.sectorComparison.sector1.winner === 'rival'">✓</span>
+          </div>
+          <div class="sector-item" [class.winner]="data.comparison.sectorComparison.sector2.winner === 'rival'">
+            <span class="sector-label">S2</span>
+            <span class="sector-value">{{ formatSectorTime(data.rivalTime.sector2Ms) }}</span>
+            <span class="sector-badge" *ngIf="data.comparison.sectorComparison.sector2.winner === 'rival'">✓</span>
+          </div>
+          <div class="sector-item" [class.winner]="data.comparison.sectorComparison.sector3.winner === 'rival'">
+            <span class="sector-label">S3</span>
+            <span class="sector-value">{{ formatSectorTime(data.rivalTime.sector3Ms) }}</span>
+            <span class="sector-badge" *ngIf="data.comparison.sectorComparison.sector3.winner === 'rival'">✓</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sector Comparison Chart -->
+    <div class="chart-container">
+      <h2 class="section-title">📊 Comparație pe Sectoare</h2>
+      <div class="bar-chart">
+        <div class="bar-group">
+          <span class="bar-label">Sector 1</span>
+          <div class="bars">
+            <div class="bar you" [style.width.%]="(data.comparison.sectorComparison.sector1.you / getMaxSector(data.comparison.sectorComparison.sector1.you, data.comparison.sectorComparison.sector1.rival)) * 100">
+              <span class="bar-value">{{ formatSectorTime(data.comparison.sectorComparison.sector1.you) }}</span>
+            </div>
+            <div class="bar rival" [style.width.%]="(data.comparison.sectorComparison.sector1.rival / getMaxSector(data.comparison.sectorComparison.sector1.you, data.comparison.sectorComparison.sector1.rival)) * 100">
+              <span class="bar-value">{{ formatSectorTime(data.comparison.sectorComparison.sector1.rival) }}</span>
+            </div>
+          </div>
+          <span class="bar-diff" [class.positive]="data.comparison.sectorComparison.sector1.diff < 0" [class.negative]="data.comparison.sectorComparison.sector1.diff > 0">
+            {{ formatDiff(data.comparison.sectorComparison.sector1.diff) }}
+          </span>
+        </div>
+
+        <div class="bar-group">
+          <span class="bar-label">Sector 2</span>
+          <div class="bars">
+            <div class="bar you" [style.width.%]="(data.comparison.sectorComparison.sector2.you / getMaxSector(data.comparison.sectorComparison.sector2.you, data.comparison.sectorComparison.sector2.rival)) * 100">
+              <span class="bar-value">{{ formatSectorTime(data.comparison.sectorComparison.sector2.you) }}</span>
+            </div>
+            <div class="bar rival" [style.width.%]="(data.comparison.sectorComparison.sector2.rival / getMaxSector(data.comparison.sectorComparison.sector2.you, data.comparison.sectorComparison.sector2.rival)) * 100">
+              <span class="bar-value">{{ formatSectorTime(data.comparison.sectorComparison.sector2.rival) }}</span>
+            </div>
+          </div>
+          <span class="bar-diff" [class.positive]="data.comparison.sectorComparison.sector2.diff < 0" [class.negative]="data.comparison.sectorComparison.sector2.diff > 0">
+            {{ formatDiff(data.comparison.sectorComparison.sector2.diff) }}
+          </span>
+        </div>
+
+        <div class="bar-group">
+          <span class="bar-label">Sector 3</span>
+          <div class="bars">
+            <div class="bar you" [style.width.%]="(data.comparison.sectorComparison.sector3.you / getMaxSector(data.comparison.sectorComparison.sector3.you, data.comparison.sectorComparison.sector3.rival)) * 100">
+              <span class="bar-value">{{ formatSectorTime(data.comparison.sectorComparison.sector3.you) }}</span>
+            </div>
+            <div class="bar rival" [style.width.%]="(data.comparison.sectorComparison.sector3.rival / getMaxSector(data.comparison.sectorComparison.sector3.you, data.comparison.sectorComparison.sector3.rival)) * 100">
+              <span class="bar-value">{{ formatSectorTime(data.comparison.sectorComparison.sector3.rival) }}</span>
+            </div>
+          </div>
+          <span class="bar-diff" [class.positive]="data.comparison.sectorComparison.sector3.diff < 0" [class.negative]="data.comparison.sectorComparison.sector3.diff > 0">
+            {{ formatDiff(data.comparison.sectorComparison.sector3.diff) }}
+          </span>
+        </div>
+      </div>
+      <div class="chart-legend">
+        <div class="legend-item">
+          <span class="legend-color you"></span>
+          <span>Tu</span>
+        </div>
+        <div class="legend-item">
+          <span class="legend-color rival"></span>
+          <span>Rival</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Insights -->
+    <div class="insights-container" *ngIf="data.comparison.insights">
+      <h2 class="section-title">💡 Analiză</h2>
+      <div class="insights-grid">
+        <div class="insight-card positive" *ngIf="data.comparison.insights.yourStrongSector">
+          <div class="insight-icon">✅</div>
+          <div class="insight-content">
+            <span class="insight-label">Punctul tău forte</span>
+            <span class="insight-value">{{ getSectorLabel(data.comparison.insights.yourStrongSector) }}</span>
+          </div>
+        </div>
+
+        <div class="insight-card negative" *ngIf="data.comparison.insights.yourWeakSector">
+          <div class="insight-icon">⚠️</div>
+          <div class="insight-content">
+            <span class="insight-label">Unde poți îmbunătăți</span>
+            <span class="insight-value">{{ getSectorLabel(data.comparison.insights.yourWeakSector) }}</span>
+          </div>
+        </div>
+
+        <div class="insight-card info" *ngIf="data.comparison.insights.rivalWeakSector">
+          <div class="insight-icon">🎯</div>
+          <div class="insight-content">
+            <span class="insight-label">Punctul lui slab</span>
+            <span class="insight-value">{{ getSectorLabel(data.comparison.insights.rivalWeakSector) }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<app-footer></app-footer>

@@ -27,7 +27,7 @@ export class ComparatiiComponent {
       icon: '⚔️',
       title: 'Duel cu Pilot',
       description: 'Alege un rival și vedeți cine este mai rapid pe circuit',
-      route: '/comparare/pilot',
+      route: '/comparare-pilot',
       color: '#E10600' // albastru
     },
     {
