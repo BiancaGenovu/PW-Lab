@@ -44,6 +44,7 @@ model TimeRecord {
   pilotId   Int      @map("pilotId")
   circuitId Int      @map("circuitId")
   createdAt DateTime @default(now()) @map("createdAt") @db.Timestamp(6)
+  updatedAt DateTime @default(now()) @updatedAt
   sector1Ms Int      @map("sector1Ms")
   sector2Ms Int      @map("sector2Ms")
   sector3Ms Int      @map("sector3Ms")

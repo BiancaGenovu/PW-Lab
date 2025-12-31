@@ -10,6 +10,7 @@ import { TimpCircuitComponent } from './timp-circuit/timp-circuit.component';
 import { TimpPilotComponent } from './timp-pilot/timp-pilot.component';
 import { authGuard } from './guards/auth.guard';
 import { ComparatiiComponent } from './comparatii/comparatii.component';
+import { ComparareTop3Component } from './comparare-top3/comparare-top3.component';
 
 export const routes: Routes = [
     
@@ -23,6 +24,7 @@ export const routes: Routes = [
   {path: "comparatii", component: ComparatiiComponent},
   {path: "evolutia-mea", loadComponent: () => import('./evolutia-mea/evolutia-mea.component').then(m => m.EvolutiaMeaComponent), canActivate: [authGuard]},
   {path: "comparare-pilot", loadComponent: () => import('./comparare-pilot/comparare-pilot.component').then(m => m.CompararePilotComponent), canActivate: [authGuard]},
+  {path: "comparare-top3", loadComponent: () => import('./comparare-top3/comparare-top3.component').then(m => m.ComparareTop3Component), canActivate: [authGuard]},
   {path: 'circuites/:circuitId/times', component: TimpCircuitComponent},
   {path: 'pilot/:pilotId/times', component: TimpPilotComponent}
 

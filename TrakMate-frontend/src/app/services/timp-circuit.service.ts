@@ -21,10 +21,12 @@ export class TimpCircuitService {
     });
   }
 
+  // GET: Listează timpii
   getCircuitTimes(circuitId: number): Observable<TimeModel[]> {
     return this.http.get<TimeModel[]>(`${this.baseApiUrl}/${circuitId}/times`);
   }
 
+  // POST: Adaugă timp nou
   addCircuitTime(
     circuitId: number,
     payload: { sector1: string | number; sector2: string | number; sector3: string | number }
@@ -36,6 +38,20 @@ export class TimpCircuitService {
     );
   }
 
+  // PUT: Modifică un timp existent (FUNCȚIA NOUĂ)
+  updateCircuitTime(
+    circuitId: number,
+    timeId: number,
+    payload: { sector1: string | number; sector2: string | number; sector3: string | number }
+  ): Observable<TimeModel> {
+    return this.http.put<TimeModel>(
+      `${this.baseApiUrl}/${circuitId}/times/${timeId}`,
+      payload,
+      { headers: this.getHeaders() }
+    );
+  }
+
+  // DELETE: Șterge un timp
   deleteCircuitTime(circuitId: number, timeId: number): Observable<any> {
     return this.http.delete(
       `${this.baseApiUrl}/${circuitId}/times/${timeId}`,

@@ -35,7 +35,7 @@ export class ComparatiiComponent {
       icon: '🏆',
       title: 'Top 3 Challenge',
       description: 'Vezi cum stai față de cei mai rapizi 3 piloți pe circuit',
-      route: '/comparare/top3',
+      route: '/comparare-top3',
       color: '#e10600' // galben/auriu
     }
   ];

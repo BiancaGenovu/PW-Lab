@@ -535,44 +535,58 @@ app.delete('/api/circuites/:circuitId/times/:timeId', authRequired, async (req, 
   }
 });
 
-// POST /api/timePilot/:pilotId/times -> adaugă timp cu sectoare pentru pilot
-app.post('/api/timePilot/:pilotId/times', authRequired, async (req, res) => {
+// PUT /api/circuites/:circuitId/times/:timeId -> Modifică timpul (Pilot propriu sau Admin)
+app.put('/api/circuites/:circuitId/times/:timeId', authRequired, async (req, res) => {
   try {
-    const pilotId = Number(req.params.pilotId);
-    const { circuitName, country, sector1, sector2, sector3 } = req.body;
+    const circuitId = Number(req.params.circuitId);
+    const timeId = Number(req.params.timeId);
+    // Primim noile valori
+    const { sector1, sector2, sector3 } = req.body;
+    
     const loggedUserId = req.user.id;
     const isAdmin = req.user.role === 'Admin';
 
-    if (!pilotId) return res.status(400).json({ message: 'Invalid pilotId' });
-    
-    // VERIFICARE: Pilot doar pentru el, Admin pentru oricine
-    if (!isAdmin && loggedUserId !== pilotId) {
-      return res.status(403).json({ message: 'You can only add times for yourself' });
+    // 1. Validări ID-uri
+    if (!circuitId || !timeId) {
+      return res.status(400).json({ error: 'Invalid circuitId or timeId' });
     }
 
-    if (!circuitName || !country || sector1 == null || sector2 == null || sector3 == null) {
-      return res.status(400).json({ message: 'circuitName, country, sector1, sector2, sector3 required' });
+    // 2. Validare date input
+    if (sector1 == null || sector2 == null || sector3 == null) {
+      return res.status(400).json({ error: 'sector1, sector2, sector3 required' });
     }
 
-    const circuit = await prisma.circuit.findFirst({
-      where: {
-        name:    { equals: String(circuitName).trim(), mode: 'insensitive' },
-        country: { equals: String(country).trim(),     mode: 'insensitive' },
-        isActive: true
-      },
-      select: { id: true, name: true, country: true }
+    // 3. Căutăm timpul existent
+    const existingTime = await prisma.timeRecord.findUnique({
+      where: { id: timeId },
+      select: { id: true, pilotId: true, circuitId: true }
     });
-    if (!circuit) return res.status(400).json({ message: 'Circuit not found' });
 
-    // Parsează timpii sectoare
+    if (!existingTime) {
+      return res.status(404).json({ error: 'Time record not found' });
+    }
+
+    // Verificăm dacă timpul aparține circuitului din URL
+    if (existingTime.circuitId !== circuitId) {
+      return res.status(400).json({ error: 'Time does not belong to this circuit' });
+    }
+
+    // 4. Verificare permisiuni (Admin sau proprietar)
+    if (!isAdmin) {
+      if (existingTime.pilotId !== loggedUserId) {
+        return res.status(403).json({ error: 'You can only modify your own times' });
+      }
+    }
+
+    // 5. Parsăm noile valori
     const sector1Ms = parseLapToMs(sector1);
     const sector2Ms = parseLapToMs(sector2);
     const sector3Ms = parseLapToMs(sector3);
 
-    const created = await prisma.timeRecord.create({
-      data: { 
-        pilotId, 
-        circuitId: circuit.id, 
+    // 6. Update în baza de date
+    const updated = await prisma.timeRecord.update({
+      where: { id: timeId },
+      data: {
         sector1Ms,
         sector2Ms,
         sector3Ms
@@ -583,6 +597,68 @@ app.post('/api/timePilot/:pilotId/times', authRequired, async (req, res) => {
         sector2Ms: true,
         sector3Ms: true,
         createdAt: true,
+        updatedAt: true,
+        pilot:   { select: { id: true, firstName: true, lastName: true } },
+        circuit: { select: { id: true, name: true, country: true } }
+      }
+    });
+
+    // 7. Recalculăm totalul pentru răspuns
+    const response = {
+      ...updated,
+      lapTimeMs: calculateTotalTime(updated.sector1Ms, updated.sector2Ms, updated.sector3Ms)
+    };
+
+    res.status(200).json(response);
+
+  } catch (e) {
+    console.error('Update circuit time error:', e);
+    res.status(500).json({ error: 'DB error', detail: String(e.message || e) });
+  }
+});
+
+// POST /api/timePilot/:pilotId/times -> adaugă timp cu sectoare pentru pilot
+// POST /api/timePilot/:pilotId/times -> adaugă timp cu sectoare pentru pilot
+app.post('/api/timePilot/:pilotId/times', authRequired, async (req, res) => {
+  try {
+    const pilotId = Number(req.params.pilotId);
+    // MODIFICARE: Acum primim circuitId direct, nu numele
+    const { circuitId, sector1, sector2, sector3 } = req.body;
+    const loggedUserId = req.user.id;
+    const isAdmin = req.user.role === 'Admin';
+
+    if (!pilotId) return res.status(400).json({ message: 'Invalid pilotId' });
+    
+    // VERIFICARE: Pilot doar pentru el, Admin pentru oricine
+    if (!isAdmin && loggedUserId !== pilotId) {
+      return res.status(403).json({ message: 'You can only add times for yourself' });
+    }
+
+    // Validare input
+    if (!circuitId || sector1 == null || sector2 == null || sector3 == null) {
+      return res.status(400).json({ message: 'circuitId, sector1, sector2, sector3 required' });
+    }
+
+    // Parsează timpii sectoare
+    const sector1Ms = parseLapToMs(sector1);
+    const sector2Ms = parseLapToMs(sector2);
+    const sector3Ms = parseLapToMs(sector3);
+
+    const created = await prisma.timeRecord.create({
+      data: { 
+        pilotId, 
+        circuitId: Number(circuitId), // Folosim ID-ul direct
+        sector1Ms,
+        sector2Ms,
+        sector3Ms
+      },
+      select: {
+        id: true,
+        sector1Ms: true,
+        sector2Ms: true,
+        sector3Ms: true,
+        createdAt: true,
+        updatedAt: true,
         pilot:   { select: { id: true, firstName: true, lastName: true } },
         circuit: { select: { id: true, name: true, country: true } }
       }
@@ -642,11 +718,97 @@ app.delete('/api/timePilot/:pilotId/times/:timeId', authRequired, async (req, re
   }
 });
 
+// PUT /api/timePilot/:pilotId/times/:timeId -> Modifică timpul (DOAR PILOTUL PROPRIU)
+app.put('/api/timePilot/:pilotId/times/:timeId', authRequired, async (req, res) => {
+  try {
+    const pilotId = Number(req.params.pilotId);
+    const timeId = Number(req.params.timeId);
+    // Primim noile valori pentru sectoare
+    const { sector1, sector2, sector3 } = req.body;
+    
+    const loggedUserId = req.user.id;
+    const isAdmin = req.user.role === 'Admin';
+
+    // Validări ID-uri
+    if (!pilotId || !timeId) {
+      return res.status(400).json({ message: 'Invalid pilotId or timeId' });
+    }
+
+    // Validare inputuri (trebuie să avem toate cele 3 sectoare pentru a recalcula totalul)
+    if (sector1 == null || sector2 == null || sector3 == null) {
+      return res.status(400).json({ message: 'sector1, sector2, sector3 required' });
+    }
+
+    // 1. Căutăm timpul existent în baza de date
+    const existingTime = await prisma.timeRecord.findUnique({
+      where: { id: timeId },
+      select: { id: true, pilotId: true }
+    });
+
+    if (!existingTime) {
+      return res.status(404).json({ message: 'Time record not found' });
+    }
+
+    // 2. Verificare de securitate (CRUCIALĂ)
+    // Dacă utilizatorul NU este admin, verificăm dacă ID-ul lui este același cu al celui care a creat timpul.
+    if (!isAdmin) {
+      if (loggedUserId !== existingTime.pilotId) {
+        return res.status(403).json({ message: 'You can only modify your own times' });
+      }
+      
+      // Opțional: ne asigurăm că url-ul corespunde cu posesorul timpului
+      if (pilotId !== existingTime.pilotId) {
+         return res.status(403).json({ message: 'Pilot ID in URL does not match time owner' });
+      }
+    }
+
+    // 3. Parsăm noile valori folosind funcția helper existentă în index.js
+    const sector1Ms = parseLapToMs(sector1);
+    const sector2Ms = parseLapToMs(sector2);
+    const sector3Ms = parseLapToMs(sector3);
+
+    // 4. Facem Update în baza de date
+    const updated = await prisma.timeRecord.update({
+      where: { id: timeId },
+      data: {
+        sector1Ms,
+        sector2Ms,
+        sector3Ms
+      },
+      select: {
+        id: true,
+        sector1Ms: true,
+        sector2Ms: true,
+        sector3Ms: true,
+        createdAt: true, 
+        updatedAt: true, // Prisma actualizează automat acest câmp
+        pilot:   { select: { id: true, firstName: true, lastName: true } },
+        circuit: { select: { id: true, name: true, country: true } }
+      }
+    });
+
+    // 5. Recalculăm totalul pentru a-l trimite înapoi corect la Frontend
+    const response = {
+      ...updated,
+      lapTimeMs: calculateTotalTime(updated.sector1Ms, updated.sector2Ms, updated.sector3Ms)
+    };
+
+    res.status(200).json(response);
+
+  } catch (e) {
+    console.error('Update time error:', e);
+    res.status(500).json({ message: 'DB error', detail: String(e.message || e) });
+  }
+});
+
 const evolutiaMeaRouter = require('./modules/evolutiaMea/evolutiaMea.routes.js');
 app.use('/api/evolutia-mea', evolutiaMeaRouter);
 
 const compararePilotRouter = require('./modules/comparare-pilot/comparare-pilot.routes.js');
 app.use('/api/comparare-pilot', compararePilotRouter);
+
+const comparareTop3Router = require('./modules/comparare-top3/comparare-top3.routes.js');
+app.use('/api/comparare-top3', comparareTop3Router);
 
 // ===== start
 const PORT = process.env.PORT || 3000;

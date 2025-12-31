@@ -280,7 +280,8 @@ html, body, .page {
     animation: pulse-glow 2s ease-in-out infinite;
 }
 
-/* Buton șterge */
+/* --- BUTOANE EDIT/DELETE --- */
+
 .btn-delete {
   background-color: #dc3545;
   color: white;
@@ -293,6 +294,27 @@ html, body, .page {
 
 .btn-delete:hover {
   background-color: #c82333;
+}
+
+.btn-edit {
+  background-color: #ffc107; /* Galben */
+  color: #000;
+  padding: 0.4rem 0.8rem;
+  font-size: 0.875rem;
+  border: none;
+  cursor: pointer;
+  border-radius: 4px;
+  font-weight: bold;
+}
+
+.btn-edit:hover {
+  background-color: #e0a800;
+}
+
+/* Evidențiere rând editat */
+.editing-row {
+  background: rgba(255, 193, 7, 0.1) !important;
+  border-left: 3px solid #ffc107;
 }
 
 @keyframes pulse-glow {

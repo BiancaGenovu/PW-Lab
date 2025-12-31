@@ -1,0 +1,164 @@
+<app-nav-bar></app-nav-bar>
+
+<section class="page">
+  <header class="page__header">
+    <button class="back-btn" (click)="goBack()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M19 12H5M12 19l-7-7 7-7"/>
+      </svg>
+      Înapoi
+    </button>
+    <h1>🏆 Comparare cu Top 3</h1>
+    <p class="muted">
+      Compară-te cu cei mai rapizi 3 piloți de pe circuit
+    </p>
+  </header>
+
+  <div class="circuit-selector">
+    <label for="circuitSelect">Selectează Circuitul:</label>
+    <select 
+      id="circuitSelect" 
+      [(ngModel)]="selectedCircuitId" 
+      (change)="onCircuitChange()"
+      [disabled]="loadingCircuits"
+    >
+      <option [value]="null">-- Alege un circuit --</option>
+      <option *ngFor="let circuit of circuits" [value]="circuit.id">
+        {{ circuit.name }} ({{ circuit.country }})
+      </option>
+    </select>
+  </div>
+
+  <div class="loading" *ngIf="loading">
+    <div class="spinner"></div>
+    <p>Se încarcă datele...</p>
+  </div>
+
+  <div class="message" *ngIf="!loading && data && data.message">
+  {{ data.message }}
+</div>
+
+  <div class="results-container" *ngIf="!loading && data && !data.message">
+    
+    <!-- My Position Section -->
+    <div class="my-position" *ngIf="data.myPosition">
+      <h2>📍 Poziția Ta</h2>
+      <div class="position-info">
+        <span class="position-badge">
+          Loc #{{ data.myPosition.position }}
+        </span>
+        <span class="position-total">
+          din {{ data.myPosition.totalPilots }} piloți
+        </span>
+      </div>
+      <div class="position-time">
+        {{ formatTime(data.myPosition.time.lapTimeMs) }}
+      </div>
+    </div>
+
+    <!-- Top 3 Grid -->
+    <h2 class="section-title">🏁 Top 3 Piloți</h2>
+    <div class="top3-grid">
+      <article 
+        class="pilot-card" 
+        *ngFor="let record of data.top3; let i = index"
+        [class.card-gold]="i === 0"
+        [class.card-silver]="i === 1"
+        [class.card-bronze]="i === 2"
+        [class.card-me]="isMe(record.pilotId)"
+      >
+        <div class="medal">{{ getMedalEmoji(i) }}</div>
+        <img 
+          [src]="getPilotImageUrl(record.pilot)" 
+          [alt]="record.pilot.firstName + ' ' + record.pilot.lastName" 
+          class="pilot-image"
+        />
+        <div class="pilot-name">
+          {{ record.pilot.firstName }} {{ record.pilot.lastName }}
+        </div>
+        <div class="me-badge" *ngIf="isMe(record.pilotId)">👤 Tu</div>
+        <div class="lap-time">{{ formatTime(record.lapTimeMs) }}</div>
+        <div class="sectors">
+          <div class="sector">
+            <div class="sector-label">S1</div>
+            <div class="sector-time">{{ formatSectorTime(record.sector1Ms) }}</div>
+          </div>
+          <div class="sector">
+            <div class="sector-label">S2</div>
+            <div class="sector-time">{{ formatSectorTime(record.sector2Ms) }}</div>
+          </div>
+          <div class="sector">
+            <div class="sector-label">S3</div>
+            <div class="sector-time">{{ formatSectorTime(record.sector3Ms) }}</div>
+          </div>
+        </div>
+      </article>
+    </div>
+
+    <!-- Gap Analysis -->
+    <div class="gap-analysis" *ngIf="data.gapAnalysis">
+      <h3 class="section-title">📊 Analiză Diferențe față de Lider</h3>
+      
+      <div class="gap-grid">
+        <div class="gap-item">
+          <div class="gap-label">Diferență Timp Total</div>
+          <div 
+            class="gap-value"
+            [class.positive]="data.gapAnalysis.timeDiff > 0"
+            [class.negative]="data.gapAnalysis.timeDiff < 0"
+            [class.neutral]="data.gapAnalysis.timeDiff === 0"
+          >
+            {{ formatDiff(data.gapAnalysis.timeDiff) }}
+          </div>
+        </div>
+        <div class="gap-item">
+          <div class="gap-label">Sector 1</div>
+          <div 
+            class="gap-value"
+            [class.positive]="data.gapAnalysis.sector1Diff > 0"
+            [class.negative]="data.gapAnalysis.sector1Diff < 0"
+            [class.neutral]="data.gapAnalysis.sector1Diff === 0"
+          >
+            {{ formatDiff(data.gapAnalysis.sector1Diff) }}
+          </div>
+        </div>
+        <div class="gap-item">
+          <div class="gap-label">Sector 2</div>
+          <div 
+            class="gap-value"
+            [class.positive]="data.gapAnalysis.sector2Diff > 0"
+            [class.negative]="data.gapAnalysis.sector2Diff < 0"
+            [class.neutral]="data.gapAnalysis.sector2Diff === 0"
+          >
+            {{ formatDiff(data.gapAnalysis.sector2Diff) }}
+          </div>
+        </div>
+        <div class="gap-item">
+          <div class="gap-label">Sector 3</div>
+          <div 
+            class="gap-value"
+            [class.positive]="data.gapAnalysis.sector3Diff > 0"
+            [class.negative]="data.gapAnalysis.sector3Diff < 0"
+            [class.neutral]="data.gapAnalysis.sector3Diff === 0"
+          >
+            {{ formatDiff(data.gapAnalysis.sector3Diff) }}
+          </div>
+        </div>
+      </div>
+
+      <div class="closeness-container">
+        <div class="closeness-label">Proximitate față de lider:</div>
+        <div class="closeness-bar">
+          <div 
+            class="closeness-fill" 
+            [style.width.%]="data.gapAnalysis.closenessPercentage"
+          >
+            {{ data.gapAnalysis.closenessPercentage }}%
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<app-footer></app-footer>

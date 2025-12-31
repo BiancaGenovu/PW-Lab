@@ -16,21 +16,50 @@
       <option value="date">Sortează: Data (cel mai recent)</option>
     </select>
 
-    <button class="btn" *ngIf="canEditPage()" (click)="showForm = !showForm">
+    <button class="btn" *ngIf="canEditPage()" (click)="cancelEdit()">
       {{ showForm ? 'Anulează' : 'Adaugă timp' }}
     </button>
   </div>
 
-  <form class="add-time" *ngIf="showForm && canEditPage()" (ngSubmit)="submitNewTime()">
+  <form class="add-time" *ngIf="showForm && canEditPage()" (ngSubmit)="submitForm()">
+    <h3 style="margin-top:0; margin-bottom: 1rem; color: white;">
+        {{ editingTimeId ? '✏️ Modifică timpul' : '➕ Adaugă timp nou' }}
+    </h3>
+    
     <div class="row">
-      <input type="text" placeholder="Circuit (ex. Silverstone)" [(ngModel)]="form.circuitName" name="circuitName" required />
-      <input type="text" placeholder="Țară (ex. Marea Britanie)" [(ngModel)]="form.country" name="country" required />
+      <select 
+          [(ngModel)]="form.circuitId" 
+          name="circuitId" 
+          (change)="onCircuitChange()" 
+          required 
+          class="sel" 
+          style="flex: 1; min-width: 150px; margin-right: 1rem;"
+          [disabled]="editingTimeId !== null">
+          
+          <option [ngValue]="null" disabled>Alege un circuit...</option>
+          <option *ngFor="let c of circuits" [ngValue]="c.id">
+            {{ c.name }}
+          </option>
+      </select>
+
+      <input 
+          type="text" 
+          placeholder="Țara se completează automat" 
+          [(ngModel)]="form.country" 
+          name="country" 
+          readonly 
+          style="opacity: 0.7; cursor: not-allowed; flex: 1;" 
+      />
     </div>
+
     <div class="row">
       <input type="text" placeholder="Sector 1 (MM:SS.mmm sau ms)" [(ngModel)]="form.sector1" name="sector1" required />
       <input type="text" placeholder="Sector 2 (MM:SS.mmm sau ms)" [(ngModel)]="form.sector2" name="sector2" required />
       <input type="text" placeholder="Sector 3 (MM:SS.mmm sau ms)" [(ngModel)]="form.sector3" name="sector3" required />
-      <button class="btn" type="submit">Salvează</button>
+      
+      <button class="btn" type="submit">
+          {{ editingTimeId ? 'Actualizează' : 'Salvează' }}
+      </button>
     </div>
     <p class="muted">Exemple: <code>00:25.340</code> sau <code>25340</code> (ms) pentru fiecare sector</p>
   </form>
@@ -63,7 +92,7 @@
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let time of times; let i = index">
+        <tr *ngFor="let time of times; let i = index" [class.editing-row]="time.id === editingTimeId">
           <td><span class="rank" *ngIf="i === 0">🏆</span><span *ngIf="i > 0">{{ i + 1 }}</span></td>
           <td>{{ time.circuit.name }}</td>
           <td>{{ time.circuit.country }}</td>
@@ -72,14 +101,27 @@
           <td><span class="sector-time">{{ formatSectorTime(time.sector3Ms) }}</span></td>
           <td><span class="lap-time" [class.best-lap]="i === 0">{{ formatLapTime(time.lapTimeMs) }}</span></td>
           <td>{{ time.createdAt | date: 'mediumDate' }}</td>
+          
           <td *ngIf="canEditPage()">
-            <button 
-              class="btn btn-delete" 
-              *ngIf="canDeleteTime(time)"
-              (click)="deleteTime(time.id)"
-            >
-              🗑️ Șterge
-            </button>
+            <div style="display: flex; gap: 0.5rem;">
+                <button 
+                  class="btn btn-edit" 
+                  *ngIf="canDeleteTime(time)"
+                  (click)="startEdit(time)"
+                  title="Modifică"
+                >
+                  ✏️
+                </button>
+
+                <button 
+                  class="btn btn-delete" 
+                  *ngIf="canDeleteTime(time)"
+                  (click)="deleteTime(time.id)"
+                  title="Șterge"
+                >
+                  🗑️
+                </button>
+            </div>
           </td>
         </tr>
       </tbody>

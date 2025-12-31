@@ -3,6 +3,7 @@
 <section class="page">
   <header class="page__header">
     <h1>Timpi înregistrați pe {{ circuitName }}</h1>
+    <p class="muted" *ngIf="circuitCountry">Locație: {{ circuitCountry }}</p>
     <p class="muted">Total: {{ times.length }} înregistrare{{ times.length === 1 ? '' : 'i' }}.</p>
   </header>
 
@@ -14,12 +15,16 @@
       <option value="date">Sortează: Data (cel mai recent)</option>
     </select>
 
-    <button class="btn" *ngIf="isLoggedIn()" (click)="showForm = !showForm">
+    <button class="btn" *ngIf="currentUserId" (click)="cancelEdit()">
       {{ showForm ? 'Anulează' : 'Adaugă timp' }}
     </button>
   </div>
 
-  <form class="add-time" *ngIf="showForm && isLoggedIn()" (ngSubmit)="submitNewTime()">
+  <form class="add-time" *ngIf="showForm && currentUserId" (ngSubmit)="submitForm()">
+    <h3 style="margin-top:0; margin-bottom: 1rem; color: white;">
+        {{ editingTimeId ? '✏️ Modifică timpul' : '➕ Adaugă timp nou' }}
+    </h3>
+
     <div class="row">
       <input 
         type="text" 
@@ -42,7 +47,9 @@
         name="sector3" 
         required 
       />
-      <button class="btn" type="submit">Salvează</button>
+      <button class="btn" type="submit">
+          {{ editingTimeId ? 'Actualizează' : 'Salvează' }}
+      </button>
     </div>
     <p class="muted">
       Exemple: <code>00:25.340</code> sau <code>25340</code> (ms) pentru fiecare sector
@@ -57,7 +64,7 @@
   <div class="empty" *ngIf="!loading && !times.length">
     <div class="empty__card">
       <h3>Niciun timp înregistrat</h3>
-      <p class="muted">Acest circuit nu are încă timpi.</p>
+      <p class="muted">Fii primul care stabilește un record pe {{ circuitName }}!</p>
     </div>
   </div>
 
@@ -72,26 +79,39 @@
           <th>Sector 3</th>
           <th>Timp Total</th>
           <th>Data</th>
-          <th *ngIf="isLoggedIn()">Acțiuni</th>
+          <th *ngIf="currentUserId">Acțiuni</th>
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let time of times; let i = index">
+        <tr *ngFor="let time of times; let i = index" [class.editing-row]="time.id === editingTimeId">
           <td><span class="rank" *ngIf="i === 0">🥇</span><span *ngIf="i > 0">{{ i + 1 }}</span></td>
+          
           <td>{{ time.pilot.firstName }} {{ time.pilot.lastName }}</td>
+          
           <td><span class="sector-time">{{ formatSectorTime(time.sector1Ms) }}</span></td>
           <td><span class="sector-time">{{ formatSectorTime(time.sector2Ms) }}</span></td>
           <td><span class="sector-time">{{ formatSectorTime(time.sector3Ms) }}</span></td>
           <td><span class="lap-time" [class.best-lap]="i === 0">{{ formatLapTime(time.lapTimeMs) }}</span></td>
           <td>{{ time.createdAt | date: 'mediumDate' }}</td>
-          <td *ngIf="isLoggedIn()">
-            <button 
-              class="btn btn-delete" 
-              *ngIf="canDeleteTime(time)" 
-              (click)="deleteTime(time.id)"
-            >
-              🗑️ Șterge
-            </button>
+          
+          <td *ngIf="canModifyTime(time)">
+            <div style="display: flex; gap: 0.5rem;">
+                <button 
+                  class="btn btn-edit" 
+                  (click)="startEdit(time)"
+                  title="Modifică"
+                >
+                  ✏️
+                </button>
+
+                <button 
+                  class="btn btn-delete" 
+                  (click)="deleteTime(time.id)"
+                  title="Șterge"
+                >
+                  🗑️
+                </button>
+            </div>
           </td>
         </tr>
       </tbody>

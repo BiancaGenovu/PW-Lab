@@ -18,12 +18,17 @@ import { FooterComponent } from '../footer/footer.component';
 export class TimpCircuitComponent implements OnInit {
   times: TimeModel[] = [];
   circuitName = 'Încărcare...';
+  circuitCountry = ''; // Adăugat pentru a afișa și țara
   circuitId: number | null = null;
   loading = true;
 
   sortBy: 'time' | 'date' = 'time';
 
   showForm = false;
+  
+  // Variabilă nouă pentru a reține ID-ul timpului pe care îl edităm
+  editingTimeId: number | null = null;
+
   form = { 
     sector1: '', 
     sector2: '', 
@@ -64,7 +69,10 @@ export class TimpCircuitComponent implements OnInit {
     this.svc.getCircuitTimes(id).subscribe({
       next: data => {
         this.times = data ?? [];
-        if (this.times.length) this.circuitName = this.times[0].circuit.name;
+        if (this.times.length && this.times[0].circuit) {
+           this.circuitName = this.times[0].circuit.name;
+           this.circuitCountry = this.times[0].circuit.country;
+        }
         this.applySort();
         this.loading = false;
       },
@@ -75,26 +83,74 @@ export class TimpCircuitComponent implements OnInit {
     });
   }
 
-  submitNewTime(): void {
+  // --- LOGICA DE ADĂUGARE ȘI EDITARE ---
+
+  submitForm(): void {
     if (!this.circuitId) return;
+    
     const { sector1, sector2, sector3 } = this.form;
     if (!sector1 || !sector2 || !sector3) {
       alert('Completează toate sectoarele!');
       return;
     }
 
-    this.svc.addCircuitTime(this.circuitId, { sector1, sector2, sector3 }).subscribe({
-      next: _created => {
-        this.form = { sector1: '', sector2: '', sector3: '' };
-        this.showForm = false;
-        this.fetchTimes(this.circuitId!);
-      },
-      error: err => {
-        console.error('Eroare add time', err);
-        alert(err?.error?.error || err?.error?.detail || 'Nu s-a putut adăuga timpul.');
-      }
-    });
+    const payload = { sector1, sector2, sector3 };
+
+    if (this.editingTimeId) {
+      // --- UPDATE (MODIFICARE) ---
+      this.svc.updateCircuitTime(this.circuitId, this.editingTimeId, payload).subscribe({
+        next: () => {
+          this.resetForm();
+          this.fetchTimes(this.circuitId!);
+        },
+        error: err => {
+          console.error('Eroare update time', err);
+          alert(err?.error?.error || 'Nu s-a putut actualiza timpul.');
+        }
+      });
+    } else {
+      // --- CREATE (ADĂUGARE) ---
+      this.svc.addCircuitTime(this.circuitId, payload).subscribe({
+        next: () => {
+          this.resetForm();
+          this.fetchTimes(this.circuitId!);
+        },
+        error: err => {
+          console.error('Eroare add time', err);
+          alert(err?.error?.error || err?.error?.detail || 'Nu s-a putut adăuga timpul.');
+        }
+      });
+    }
   }
+
+  // Funcție apelată când apeși pe butonul "Creion"
+  startEdit(time: TimeModel): void {
+    this.editingTimeId = time.id;
+    this.form = { 
+      sector1: time.sector1Ms.toString(), 
+      sector2: time.sector2Ms.toString(), 
+      sector3: time.sector3Ms.toString() 
+    };
+    this.showForm = true;
+    // Scroll opțional sus la formular
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // Funcție pentru butonul "Anulează"
+  cancelEdit(): void {
+    this.showForm = !this.showForm;
+    if (!this.showForm) {
+      this.resetForm();
+    }
+  }
+
+  resetForm(): void {
+    this.form = { sector1: '', sector2: '', sector3: '' };
+    this.editingTimeId = null;
+    this.showForm = false;
+  }
+
+  // --- LOGICA DE ȘTERGERE ---
 
   deleteTime(timeId: number): void {
     if (!this.circuitId) return;
@@ -102,6 +158,10 @@ export class TimpCircuitComponent implements OnInit {
 
     this.svc.deleteCircuitTime(this.circuitId, timeId).subscribe({
       next: () => {
+        // Dacă ștergeam exact timpul pe care îl editam, resetăm formularul
+        if (this.editingTimeId === timeId) {
+          this.resetForm();
+        }
         this.fetchTimes(this.circuitId!);
       },
       error: err => {
@@ -111,6 +171,8 @@ export class TimpCircuitComponent implements OnInit {
     });
   }
 
+  // --- HELPERE ---
+
   isMyTime(time: TimeModel): boolean {
     return this.currentUserId !== null && time.pilot.id === this.currentUserId;
   }
@@ -119,7 +181,8 @@ export class TimpCircuitComponent implements OnInit {
     return this.authService.isLoggedIn();
   }
 
-  canDeleteTime(time: TimeModel): boolean {
+  // Folosită în HTML pentru a arăta butoanele de Edit/Delete
+  canModifyTime(time: TimeModel): boolean {
     return this.isAdminUser || this.isMyTime(time);
   }
 
