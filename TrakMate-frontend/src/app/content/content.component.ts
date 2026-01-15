@@ -1,7 +1,9 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../services/auth.service';
+// IMPORT NOU
+import { ContentService } from '../services/content.service';
 
 @Component({
   selector: 'app-content',
@@ -10,11 +12,32 @@ import { AuthService } from '../services/auth.service';
   templateUrl: './content.component.html',
   styleUrls: ['./content.component.css']
 })
-export class ContentComponent {
+export class ContentComponent implements OnInit {
+  // Variabile pentru statistici (valori inițiale 0 sau "...")
+  totalCircuits: number | string = '...';
+  totalTimes: number | string = '...';
+
   constructor(
     private router: Router,
-    private authService: AuthService
+    private authService: AuthService,
+    private contentService: ContentService // Injectăm service-ul
   ) {}
+
+  ngOnInit(): void {
+    // Încărcăm datele reale
+    this.contentService.getHomepageStats().subscribe({
+      next: (data) => {
+        this.totalCircuits = data.circuits;
+        this.totalTimes = data.times;
+      },
+      error: (err) => {
+        console.error('Nu am putut încărca statisticile', err);
+        // Fallback în caz de eroare
+        this.totalCircuits = 23; 
+        this.totalTimes = '1000+';
+      }
+    });
+  }
 
   get isLoggedIn(): boolean {
     return !!this.authService.getToken();
@@ -30,6 +53,6 @@ export class ContentComponent {
 
   onLogoutClick() {
     this.authService.logout();
-    this.router.navigate(['/']); // rămâi pe home după delogare
-  }
+    this.router.navigate(['/']); 
+  }
 }

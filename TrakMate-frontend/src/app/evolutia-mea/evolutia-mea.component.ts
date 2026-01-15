@@ -5,11 +5,10 @@ import { Router } from '@angular/router';
 
 import { NavBarComponent } from '../nav-bar/nav-bar.component';
 import { FooterComponent } from '../footer/footer.component';
-import { ComparatiiComponent } from '../comparatii/comparatii.component';
 import { EvolutiaMeaService } from '../services/evolutia-mea.service';
 import { AuthService } from '../services/auth.service';
 import { CircuitesService } from '../services/circuites.service';
-import { EvolutionResponse, TimeRecord } from '../shared/evolutiaMea';
+import { EvolutionResponse } from '../shared/evolutiaMea';
 import { circuitesModel } from '../shared/circuitesModel';
 
 @Component({
@@ -70,7 +69,6 @@ export class EvolutiaMeaComponent implements OnInit {
       next: (response) => {
         this.data = response;
         this.loading = false;
-        // Metoda va fi rulată automat în HTML, dar o păstrăm pentru consistență
       },
       error: (err) => {
         console.error('Eroare la încărcarea evoluției', err);
@@ -82,14 +80,39 @@ export class EvolutiaMeaComponent implements OnInit {
 
   /**
    * Calculează intervalul total (diferența dintre cel mai rău și cel mai bun timp).
-   * Aceasta este necesară pentru a evita împărțirea la zero și pentru a normaliza datele.
    */
   getDeltaRange(): number {
-    if (!this.data || !this.data.stats) return 1; // Returnează 1 pentru a evita împărțirea la zero
+    if (!this.data || !this.data.stats) return 1;
     
     const delta = this.data.stats.worstTime - this.data.stats.bestTime;
-    // Dacă delta este 0 (toți timpii sunt identici), returnează o valoare mică, dar pozitivă
     return delta > 0 ? delta : 1; 
+  }
+
+  /**
+   * Generează coordonatele pentru linia SVG (NOU)
+   * Format: "x1,y1 x2,y2 ..."
+   */
+  getChartPoints(): string {
+    if (!this.data || !this.data.times || this.data.times.length < 2) {
+      return '';
+    }
+
+    const range = this.getDeltaRange();
+    const worst = this.data.stats!.worstTime;
+    const totalPoints = this.data.times.length;
+    
+    return this.data.times.map((time, i) => {
+      // Calculăm X: procentual pe lățime (0 -> 100)
+      const x = (i / (totalPoints - 1)) * 100;
+
+      // Calculăm Y: procentual pe înălțime (0 -> 100)
+      // În SVG, 0 e sus, 100 e jos. 
+      // Calculăm întâi cât de "jos" e punctul (ca în HTML bottom%), apoi scădem din 100.
+      const bottomPerc = ((worst - time.lapTimeMs) / range) * 100;
+      const y = 100 - bottomPerc;
+
+      return `${x},${y}`;
+    }).join(' ');
   }
 
   formatTime(ms: number): string {

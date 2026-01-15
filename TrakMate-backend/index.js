@@ -15,6 +15,9 @@ const authRouter = require('./modules/auth/auth.routes.js');
 // IMPORT NOU: routerul de profil
 const profileRouter = require('./modules/profile/profile.routes.js');
 
+// IMPORT NOU: routerul de statistici
+const statsRouter = require('./modules/stats/stats.routes.js');
+
 // IMPORT: middleware de autentificare
 const { authRequired } = require('./modules/auth/auth.middleware.js');
 
@@ -105,6 +108,9 @@ const uploadCircuit = multer({
 
 // ===== healthcheck
 app.get('/health', (_req, res) => res.send('OK'));
+
+// ===== STATS (Homepage)
+app.use('/api/stats', statsRouter);
 
 // ===== AUTH (login/register) – montăm routerul /api/auth
 app.use('/api/auth', authRouter);

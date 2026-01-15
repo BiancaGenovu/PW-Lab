@@ -12,7 +12,6 @@
     <p class="muted">Analizează-ți progresul și vezi cum ai evoluat pe circuit</p>
   </header>
 
-  <!-- Selector Circuit -->
   <div class="selector-container">
     <label for="circuit-select" class="selector-label">Selectează Circuit:</label>
     <select 
@@ -29,13 +28,11 @@
     </select>
   </div>
 
-  <!-- Loading -->
   <div class="empty" *ngIf="loading">
     <div class="spinner"></div>
     <p>Se încarcă datele...</p>
   </div>
 
-  <!-- No Data -->
   <div class="empty" *ngIf="!loading && data && data.stats === null">
     <div class="empty__card">
       <h3>📭 Niciun timp înregistrat</h3>
@@ -43,10 +40,8 @@
     </div>
   </div>
 
-  <!-- Main Content -->
   <div class="content" *ngIf="!loading && data && data.stats">
     
-    <!-- Stats Cards -->
     <div class="stats-grid">
       <div class="stat-card">
         <div class="stat-icon">🏆</div>
@@ -94,11 +89,21 @@
       </div>
     </div>
 
-    <!-- Evolution Chart -->
     <div class="chart-container">
       <h2 class="section-title">📉 Evoluția Timpilor</h2>
       <div class="chart">
         <div class="chart-line">
+          
+          <svg class="chart-svg" viewBox="0 0 100 100" preserveAspectRatio="none">
+            <polyline
+               [attr.points]="getChartPoints()"
+               fill="none"
+               stroke="#3b82f6" 
+               stroke-width="2"
+               vector-effect="non-scaling-stroke" 
+            />
+          </svg>
+
           <div 
             class="chart-point" 
             *ngFor="let time of data.times; let i = index"
@@ -110,6 +115,7 @@
             <span class="point-label" *ngIf="time.lapTimeMs === data.stats.bestTime">🏆</span>
           </div>
         </div>
+        
         <div class="chart-labels">
           <span *ngFor="let time of data.times; let i = index" class="chart-label">
             {{ i + 1 }}
@@ -119,7 +125,6 @@
       <p class="chart-info">Total tururi: {{ data.stats.totalRuns }}</p>
     </div>
 
-    <!-- Sector Comparison -->
     <div class="comparison-container">
       <h2 class="section-title">🔍 Comparație Sectoare (Ultimul vs Best)</h2>
       <table class="comparison-table">
@@ -178,7 +183,6 @@
       </table>
     </div>
 
-    <!-- All Times List -->
     <div class="times-list">
       <h2 class="section-title">📋 Istoric Timpi</h2>
       <div class="times-grid">

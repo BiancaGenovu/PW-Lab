@@ -11,36 +11,26 @@
     </p>
 
     <div class="tm-hero__ctas">
-  <a class="btn btn--outline-red" (click)="changeToCircuites()">
-    Vezi circuite
-  </a>
+      <a class="btn btn--outline-red" (click)="changeToCircuites()">
+        Vezi circuite
+      </a>
 
-  <!-- Când NU ești logat: Loghează-te -->
-  <a
-    class="btn btn--outline-red"
-    *ngIf="!isLoggedIn"
-    (click)="changeToLogin()"
-  >
-    Loghează-te
-  </a>
+      <a class="btn btn--outline-red" *ngIf="!isLoggedIn" (click)="changeToLogin()">
+        Loghează-te
+      </a>
 
-  <!-- Când ești logat: Deloghează-te -->
-  <a
-    class="btn btn--outline-red"
-    *ngIf="isLoggedIn"
-    (click)="onLogoutClick()"
-  >
-    Deloghează-te
-  </a>
-</div>
+      <a class="btn btn--outline-red" *ngIf="isLoggedIn" (click)="onLogoutClick()">
+        Deloghează-te
+      </a>
+    </div>
 
     <div class="tm-hero__stats">
       <div class="stat">
-        <div class="stat__value">23</div>
+        <div class="stat__value">{{ totalCircuits }}</div>
         <div class="stat__label">Circuite disponibile</div>
       </div>
       <div class="stat">
-        <div class="stat__value">1000+</div>
+        <div class="stat__value">{{ totalTimes }}</div>
         <div class="stat__label">Timpi înregistrați</div>
       </div>
       <div class="stat">

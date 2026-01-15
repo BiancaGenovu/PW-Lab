@@ -270,6 +270,25 @@
   bottom: 50px;
 }
 
+/* Stiluri SVG */
+.chart-svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  z-index: 1;
+}
+
+polyline {
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  opacity: 0.6; 
+  transition: all 0.5s ease;
+}
+
+/* Puncte */
 .chart-point {
   position: absolute;
   width: 12px;
@@ -280,7 +299,7 @@
   transform: translate(-50%, 50%);
   cursor: pointer;
   transition: all 0.2s ease;
-  z-index: 2;
+  z-index: 2; 
 }
 
 .chart-point:hover {
@@ -360,6 +379,12 @@
 .comparison-table td {
   padding: 1.25rem 1rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.9); /* Text alb ușor transparent */
+}
+
+/* MODIFICARE: Forțăm textul din prima coloană (strong) să fie ALB complet */
+.comparison-table td strong {
+  color: #ffffff !important;
 }
 
 .comparison-table tbody tr:last-child td {
